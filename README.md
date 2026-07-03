@@ -43,6 +43,8 @@ Vite поднимется на `http://localhost:5173` и будет ходит�
 ЧАТ (WebSocket)     WS /ws/chat/{userId}?token=<jwt>, GET /users/{id}/chat
 СБОР СРЕДСТВ        GET /fundraisers, GET /fundraisers/{id}, POST /fundraisers, POST /fundraisers/{id}/contribute, GET /fundraisers/{id}/contributions
 МОК-БАНК            POST /mock-bank/charge
+КАЛЕНДАРЬ           GET /users/{id}/calendar.ics, GET /calendar/birthdays.ics, GET /users/{id}/calendar/google
+АДМИН (only admin)  GET /admin/stats, GET /admin/users, PATCH /admin/users/{id}, DELETE /admin/users/{id}, GET /admin/groups, DELETE /admin/groups/{id}, POST /admin/import
 ```
 
 ## Статус
@@ -52,7 +54,7 @@ Vite поднимется на `http://localhost:5173` и будет ходит�
 - [x] Сбор средств + мок-банк
 - [x] Seed-данные (демо-наполнение)
 - [x] Планировщик `@Scheduled` (авто-напоминания и авто-сбор) + живое уведомление при подписке
-- [ ] Календарь (.ics), админ-панель
+- [x] Календарь (.ics + ссылка Google) и админ-панель с импортом
 - [x] Веб-фронтенд (React + Vite + PWA)
 - [ ] Мобильное приложение
 
