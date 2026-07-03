@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { api, extractApiError } from "../lib/api";
+import { ICON_URL } from "../lib/assets";
 
 export default function AppShell({ children, refreshUnreadCount, unreadCount, user }) {
   const navigate = useNavigate();
@@ -106,7 +107,7 @@ export default function AppShell({ children, refreshUnreadCount, unreadCount, us
       <div className="background-glow background-glow-right" />
       <aside className="sidebar">
         <div className="brand-block">
-          <img className="brand-mark" src="/icon.svg" alt="OBD Birthday Planner logo" />
+          <img className="brand-mark" src={ICON_URL} alt="OBD Birthday Planner logo" />
           <div className="brand-copy">
             <p className="eyebrow">Birthday planner</p>
             <h1>Организация поздравлений без хаоса.</h1>

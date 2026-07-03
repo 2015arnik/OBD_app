@@ -1,6 +1,7 @@
 import { useState } from "react";
 import PasswordField from "../components/PasswordField";
 import { useAuth } from "../context/AuthContext";
+import { ICON_URL } from "../lib/assets";
 
 const loginInitialState = {
   email: "",
@@ -57,7 +58,7 @@ export default function AuthPage() {
     <div className="auth-layout">
       <div className="auth-hero">
         <div className="auth-brand">
-          <img className="brand-mark brand-mark-large" src="/icon.svg" alt="OBD Birthday Planner logo" />
+          <img className="brand-mark brand-mark-large" src={ICON_URL} alt="OBD Birthday Planner logo" />
           <div>
             <p className="eyebrow">Birthday Planner</p>
             <strong>OBD</strong>

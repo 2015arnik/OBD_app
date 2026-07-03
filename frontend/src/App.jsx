@@ -9,6 +9,7 @@ import {
 import AppShell from "./components/AppShell";
 import { useAuth } from "./context/AuthContext";
 import { api } from "./lib/api";
+import { ICON_URL } from "./lib/assets";
 import AuthPage from "./pages/AuthPage";
 import AdminPage from "./pages/AdminPage";
 import FriendPage from "./pages/FriendPage";
@@ -25,7 +26,7 @@ function SplashScreen() {
     <div className="splash-screen">
       <div className="splash-card">
         <div className="splash-brand">
-          <img className="brand-mark brand-mark-large" src="/icon.svg" alt="OBD Birthday Planner logo" />
+          <img className="brand-mark brand-mark-large" src={ICON_URL} alt="OBD Birthday Planner logo" />
         </div>
         <p className="eyebrow">OBD Birthday Planner</p>
         <h1>Поднимаем ваш день рождения в цифровой формат.</h1>

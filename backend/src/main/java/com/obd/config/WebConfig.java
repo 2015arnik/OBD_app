@@ -2,6 +2,7 @@ package com.obd.config;
 
 import com.obd.security.CurrentUserArgumentResolver;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -11,9 +12,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
 
     private final CurrentUserArgumentResolver currentUserArgumentResolver;
+    private final String[] allowedOriginPatterns;
 
-    public WebConfig(CurrentUserArgumentResolver currentUserArgumentResolver) {
+    public WebConfig(CurrentUserArgumentResolver currentUserArgumentResolver,
+                     @Value("${app.cors.allowed-origin-patterns:*}") String[] allowedOriginPatterns) {
         this.currentUserArgumentResolver = currentUserArgumentResolver;
+        this.allowedOriginPatterns = allowedOriginPatterns;
     }
 
     @Override
@@ -24,7 +28,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("*")
+                .allowedOriginPatterns(allowedOriginPatterns)
                 .allowedMethods("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*");
     }

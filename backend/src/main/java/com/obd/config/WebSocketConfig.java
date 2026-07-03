@@ -1,6 +1,7 @@
 package com.obd.config;
 
 import com.obd.ws.ChatWebSocketHandler;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
@@ -11,13 +12,17 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 public class WebSocketConfig implements WebSocketConfigurer {
 
     private final ChatWebSocketHandler chatWebSocketHandler;
+    private final String[] allowedOriginPatterns;
 
-    public WebSocketConfig(ChatWebSocketHandler chatWebSocketHandler) {
+    public WebSocketConfig(ChatWebSocketHandler chatWebSocketHandler,
+                           @Value("${app.cors.allowed-origin-patterns:*}") String[] allowedOriginPatterns) {
         this.chatWebSocketHandler = chatWebSocketHandler;
+        this.allowedOriginPatterns = allowedOriginPatterns;
     }
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(chatWebSocketHandler, "/ws/chat/*").setAllowedOriginPatterns("*");
+        registry.addHandler(chatWebSocketHandler, "/ws/chat/*")
+                .setAllowedOriginPatterns(allowedOriginPatterns);
     }
 }
