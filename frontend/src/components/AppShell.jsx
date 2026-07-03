@@ -2,7 +2,7 @@ import { NavLink } from "react-router-dom";
 import { initials } from "../lib/format";
 
 const navigation = [
-  { to: "/people", label: "Люди" },
+  { to: "/people", label: "Друзья" },
   { to: "/wishlist", label: "Мой вишлист" },
   { to: "/groups", label: "Группы" },
   { to: "/notifications", label: "Уведомления" }
