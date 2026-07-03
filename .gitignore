@@ -1,0 +1,15 @@
+# Java / Maven
+backend/target/
+*.class
+# IDE
+.idea/
+*.iml
+.vscode/
+# Node (web/mobile, added later)
+node_modules/
+dist/
+.expo/
+# OS
+.DS_Store
+# leftover duplicate clone (delete it manually on your Mac)
+/OBD_app/
