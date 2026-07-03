@@ -19,13 +19,11 @@ public class NotificationController {
         this.notifications = notifications;
     }
 
-    /** My notifications, newest first. */
     @GetMapping
     public List<Notification> mine(@CurrentUser User me) {
         return notifications.findByUserIdOrderByCreatedAtDesc(me.getId());
     }
 
-    /** Mark one of my notifications as read. */
     @PostMapping("/{id}/read")
     public Notification read(@PathVariable Long id, @CurrentUser User me) {
         Notification n = notifications.findById(id)

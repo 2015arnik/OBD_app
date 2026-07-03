@@ -2,7 +2,6 @@ package com.obd.model;
 
 import jakarta.persistence.*;
 
-/** One item in a user's wishlist. */
 @Entity
 @Table(name = "gifts")
 public class Gift {
@@ -11,7 +10,6 @@ public class Gift {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Whose wishlist this belongs to. */
     private Long ownerId;
 
     private String title;
@@ -21,7 +19,6 @@ public class Gift {
 
     private String url;
 
-    /** Price in whole currency units (e.g. rubles). Used by the fundraiser. */
     private Integer price;
 
     @Enumerated(EnumType.STRING)

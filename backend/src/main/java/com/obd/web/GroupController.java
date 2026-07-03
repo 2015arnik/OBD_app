@@ -32,13 +32,11 @@ public class GroupController {
         this.users = users;
     }
 
-    /** All groups (visible to everyone). */
     @GetMapping
     public List<Group> all() {
         return groups.findAll();
     }
 
-    /** Create a group. The creator automatically joins it. */
     @PostMapping
     public Group create(@Valid @RequestBody CreateGroupRequest req, @CurrentUser User me) {
         Group g = new Group();
@@ -52,7 +50,6 @@ public class GroupController {
         return g;
     }
 
-    /** Join a group (idempotent). */
     @PostMapping("/{id}/join")
     public Group join(@PathVariable Long id, @CurrentUser User me) {
         Group g = groups.findById(id)
@@ -63,7 +60,6 @@ public class GroupController {
         return g;
     }
 
-    /** Members of a group. */
     @GetMapping("/{id}/members")
     public List<UserBrief> members(@PathVariable Long id) {
         List<UserBrief> result = new ArrayList<>();

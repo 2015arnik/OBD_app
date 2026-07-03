@@ -3,7 +3,6 @@ package com.obd.model;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
-/** A money collection for a friend's gift (via the mock bank). */
 @Entity
 @Table(name = "fundraisers")
 public class Fundraiser {

@@ -2,10 +2,6 @@ package com.obd.model;
 
 import jakarta.persistence.*;
 
-/**
- * Links a user to a group (many-to-many, kept as an explicit table on purpose:
- * it is easier to read and to explain than JPA relationship "magic").
- */
 @Entity
 @Table(name = "group_memberships",
        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "group_id"}))

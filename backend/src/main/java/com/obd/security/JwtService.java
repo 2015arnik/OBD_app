@@ -8,7 +8,6 @@ import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-/** Creates and verifies JWT tokens. The user id is stored as the token "subject". */
 @Service
 public class JwtService {
 
@@ -31,7 +30,6 @@ public class JwtService {
                 .compact();
     }
 
-    /** Returns the user id, or null if the token is missing / invalid / expired. */
     public Long parseUserId(String token) {
         try {
             String subject = Jwts.parser()

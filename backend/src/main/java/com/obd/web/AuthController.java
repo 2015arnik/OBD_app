@@ -13,7 +13,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-/** Registration, login and "who am I". */
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -36,7 +35,7 @@ public class AuthController {
         User u = new User();
         u.setName(req.name);
         u.setEmail(req.email);
-        u.setPasswordHash(passwordEncoder.encode(req.password)); // store only the hash
+        u.setPasswordHash(passwordEncoder.encode(req.password));
         u.setBirthDate(req.birthDate);
         u = users.save(u);
         return new AuthResponse(jwtService.createToken(u.getId()), u);
@@ -52,7 +51,6 @@ public class AuthController {
         return new AuthResponse(jwtService.createToken(u.getId()), u);
     }
 
-    /** Returns the currently logged-in user (needs a valid token). */
     @GetMapping("/me")
     public User me(@CurrentUser User me) {
         return me;

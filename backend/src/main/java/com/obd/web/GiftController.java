@@ -21,13 +21,11 @@ public class GiftController {
         this.gifts = gifts;
     }
 
-    /** Wishlist of a given user. */
     @GetMapping("/users/{id}/gifts")
     public List<Gift> ofUser(@PathVariable Long id) {
         return gifts.findByOwnerId(id);
     }
 
-    /** Publish a gift on your own wishlist. */
     @PostMapping("/gifts")
     public Gift create(@Valid @RequestBody CreateGiftRequest req, @CurrentUser User me) {
         Gift g = new Gift();
@@ -39,10 +37,6 @@ public class GiftController {
         return gifts.save(g);
     }
 
-    /**
-     * Update a gift. Anyone logged in may change the status (e.g. reserve it),
-     * but only the owner may edit the text fields.
-     */
     @PatchMapping("/gifts/{id}")
     public Gift update(@PathVariable Long id, @RequestBody UpdateGiftRequest req, @CurrentUser User me) {
         Gift g = gifts.findById(id)
@@ -70,7 +64,6 @@ public class GiftController {
         return gifts.save(g);
     }
 
-    /** Delete a gift from your own wishlist. */
     @DeleteMapping("/gifts/{id}")
     public void delete(@PathVariable Long id, @CurrentUser User me) {
         Gift g = gifts.findById(id)

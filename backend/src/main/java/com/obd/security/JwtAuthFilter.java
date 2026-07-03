@@ -8,11 +8,6 @@ import java.io.IOException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-/**
- * Runs on every request. If a valid "Authorization: Bearer <token>" is present,
- * it stores the user id as a request attribute so controllers can read it via
- * @CurrentUser. It does NOT block requests here (public endpoints stay open).
- */
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 

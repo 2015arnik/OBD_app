@@ -2,7 +2,6 @@ package com.obd.model;
 
 import jakarta.persistence.*;
 
-/** A user subscribes to reminders about one friend (USER) or a whole GROUP. */
 @Entity
 @Table(name = "subscriptions")
 public class Subscription {
@@ -16,7 +15,6 @@ public class Subscription {
     @Enumerated(EnumType.STRING)
     private SubscriptionTargetType targetType;
 
-    /** Id of the user or the group (depending on targetType). */
     private Long targetId;
 
     public Subscription() {

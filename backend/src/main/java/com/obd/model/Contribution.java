@@ -3,7 +3,6 @@ package com.obd.model;
 import jakarta.persistence.*;
 import java.time.Instant;
 
-/** One payment into a fundraiser (mock money). */
 @Entity
 @Table(name = "contributions")
 public class Contribution {
@@ -16,7 +15,6 @@ public class Contribution {
     private Long contributorId;
     private Integer amount;
 
-    /** Fake transaction id returned by the mock bank. */
     private String mockTxnId;
 
     private Instant createdAt = Instant.now();

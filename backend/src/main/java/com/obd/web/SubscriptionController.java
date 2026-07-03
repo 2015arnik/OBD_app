@@ -28,13 +28,11 @@ public class SubscriptionController {
         this.groups = groups;
     }
 
-    /** My subscriptions. */
     @GetMapping
     public List<Subscription> mine(@CurrentUser User me) {
         return subscriptions.findBySubscriberId(me.getId());
     }
 
-    /** Subscribe to a friend (USER) or a whole group (GROUP). Duplicate-safe. */
     @PostMapping
     public Subscription create(@Valid @RequestBody CreateSubscriptionRequest req, @CurrentUser User me) {
         if (req.targetType == SubscriptionTargetType.USER && !users.existsById(req.targetId)) {
@@ -56,7 +54,6 @@ public class SubscriptionController {
         return subscriptions.save(s);
     }
 
-    /** Unsubscribe. */
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id, @CurrentUser User me) {
         Subscription s = subscriptions.findById(id)

@@ -3,7 +3,6 @@ package com.obd.model;
 import jakarta.persistence.*;
 import java.time.Instant;
 
-/** A reminder shown to a user (upcoming birthday, fundraiser created, ...). */
 @Entity
 @Table(name = "notifications")
 public class Notification {

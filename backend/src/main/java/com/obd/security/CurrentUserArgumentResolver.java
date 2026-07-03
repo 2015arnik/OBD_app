@@ -12,10 +12,6 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- * Turns a @CurrentUser method parameter into the real logged-in User.
- * No valid token -> 401 Unauthorized.
- */
 @Component
 public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolver {
 

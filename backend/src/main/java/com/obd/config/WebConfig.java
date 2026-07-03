@@ -16,13 +16,11 @@ public class WebConfig implements WebMvcConfigurer {
         this.currentUserArgumentResolver = currentUserArgumentResolver;
     }
 
-    /** Lets controllers receive the logged-in user via @CurrentUser. */
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
         resolvers.add(currentUserArgumentResolver);
     }
 
-    /** Allow the web and mobile apps (any origin) to call the API during the hackathon. */
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")

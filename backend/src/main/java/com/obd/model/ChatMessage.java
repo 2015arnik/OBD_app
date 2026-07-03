@@ -3,11 +3,6 @@ package com.obd.model;
 import jakarta.persistence.*;
 import java.time.Instant;
 
-/**
- * A message in a gift-discussion room.
- * targetUserId = whose birthday is being discussed (the room owner).
- * The birthday person is NOT allowed to read their own room.
- */
 @Entity
 @Table(name = "chat_messages")
 public class ChatMessage {

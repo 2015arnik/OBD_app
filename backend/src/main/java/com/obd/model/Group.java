@@ -2,11 +2,6 @@ package com.obd.model;
 
 import jakarta.persistence.*;
 
-/**
- * A group of people, e.g. "972501 TSU" or "volleyball team".
- * Any user can create one. Membership is stored separately in GroupMembership.
- * Table is named "groups" because GROUP is a reserved SQL word.
- */
 @Entity
 @Table(name = "groups")
 public class Group {
@@ -18,7 +13,6 @@ public class Group {
     private String name;
     private String description;
 
-    /** Id of the user who created the group. */
     private Long creatorId;
 
     public Group() {

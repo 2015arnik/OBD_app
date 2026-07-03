@@ -24,19 +24,16 @@ public class UserController {
         this.users = users;
     }
 
-    /** All users with birthdays, nearest birthday first. */
     @GetMapping
     public List<UserBrief> all() {
         return userService.listSortedByBirthday();
     }
 
-    /** Friend card: profile + groups + wishlist. */
     @GetMapping("/{id}")
     public UserCard one(@PathVariable Long id) {
         return userService.getCard(id);
     }
 
-    /** Edit your own profile (name / birth date). */
     @PatchMapping("/{id}")
     public User update(@PathVariable Long id, @RequestBody UpdateProfileRequest req, @CurrentUser User me) {
         if (!me.getId().equals(id)) {

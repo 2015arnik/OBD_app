@@ -20,7 +20,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-/** Business logic around users: birthday sorting and building the friend card. */
 @Service
 public class UserService {
 
@@ -37,7 +36,6 @@ public class UserService {
         this.gifts = gifts;
     }
 
-    /** All users, sorted so the nearest upcoming birthday comes first. */
     public List<UserBrief> listSortedByBirthday() {
         LocalDate today = LocalDate.now();
         List<UserBrief> result = new ArrayList<>();
@@ -50,7 +48,6 @@ public class UserService {
         return result;
     }
 
-    /** Full friend card: profile + groups + wishlist. */
     public UserCard getCard(Long id) {
         User u = users.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
@@ -62,13 +59,12 @@ public class UserService {
         return new UserCard(u, daysUntilBirthday(u.getBirthDate(), LocalDate.now()), userGroups, wishlist);
     }
 
-    /** Days from today until the next birthday (0 = today). Null if there is no birth date. */
     public static Integer daysUntilBirthday(LocalDate birthDate, LocalDate today) {
         if (birthDate == null) {
             return null;
         }
         MonthDay md = MonthDay.from(birthDate);
-        LocalDate thisYear = md.atYear(today.getYear());       // Feb 29 -> Feb 28 in non-leap years
+        LocalDate thisYear = md.atYear(today.getYear());
         LocalDate next = thisYear.isBefore(today) ? md.atYear(today.getYear() + 1) : thisYear;
         return (int) ChronoUnit.DAYS.between(today, next);
     }

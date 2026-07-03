@@ -6,7 +6,6 @@ import com.obd.model.User;
 import java.time.LocalDate;
 import java.util.List;
 
-/** Full friend card: profile + groups + wishlist. */
 public class UserCard {
     public Long id;
     public String name;
