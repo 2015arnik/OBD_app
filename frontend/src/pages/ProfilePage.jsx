@@ -5,13 +5,20 @@ import { useAuth } from "../context/AuthContext";
 import { api, extractApiError } from "../lib/api";
 
 export default function ProfilePage() {
-  const { updateUser, user } = useAuth();
+  const { logout, updateUser, user } = useAuth();
   const [profileForm, setProfileForm] = useState({
     name: user.name || "",
     birthDate: user.birthDate || ""
   });
-  const [feedback, setFeedback] = useState("");
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
+  const [profileFeedback, setProfileFeedback] = useState("");
+  const [passwordFeedback, setPasswordFeedback] = useState("");
   const [saving, setSaving] = useState(false);
+  const [passwordSaving, setPasswordSaving] = useState(false);
 
   useEffect(() => {
     setProfileForm({
@@ -23,6 +30,7 @@ export default function ProfilePage() {
   const saveProfile = async (event) => {
     event.preventDefault();
     setSaving(true);
+    setProfileFeedback("");
 
     try {
       const response = await api.patch(`/users/${user.id}`, {
@@ -30,11 +38,40 @@ export default function ProfilePage() {
         birthDate: profileForm.birthDate ? profileForm.birthDate : null
       });
       updateUser(response.data);
-      setFeedback("Профиль обновлён.");
+      setProfileFeedback("Профиль обновлён.");
     } catch (requestError) {
-      setFeedback(extractApiError(requestError));
+      setProfileFeedback(extractApiError(requestError));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const savePassword = async (event) => {
+    event.preventDefault();
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordFeedback("Новые пароли не совпадают.");
+      return;
+    }
+
+    setPasswordSaving(true);
+    setPasswordFeedback("");
+
+    try {
+      const response = await api.patch(`/users/${user.id}/password`, {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword
+      });
+      setPasswordFeedback(response.data.message || "Пароль обновлён.");
+      setPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+      });
+    } catch (requestError) {
+      setPasswordFeedback(extractApiError(requestError));
+    } finally {
+      setPasswordSaving(false);
     }
   };
 
@@ -55,15 +92,12 @@ export default function ProfilePage() {
         }
       />
 
-      {feedback ? <div className="feedback feedback-info">{feedback}</div> : null}
+      {profileFeedback ? <div className="feedback feedback-info">{profileFeedback}</div> : null}
 
       <section className="two-column-layout">
         <form className="panel form-stack" onSubmit={saveProfile}>
           <div className="section-title">
-            <div>
-              <h3>Основная информация</h3>
-              <p className="microcopy">{`PATCH /users/${user.id}`}</p>
-            </div>
+            <h3>Основная информация</h3>
           </div>
 
           <label>
@@ -101,28 +135,76 @@ export default function ProfilePage() {
           </button>
         </form>
 
-        <article className="panel spotlight-card">
-          <p className="eyebrow">Ваш аккаунт</p>
-          <h3>{user.name}</h3>
-          <p>
-            Здесь удобно менять имя и дату рождения, а список желаемых подарков теперь живёт
-            отдельно в разделе вишлиста.
-          </p>
-          <div className="group-list">
-            <div className="group-row">
-              <div>
-                <strong>Email для входа</strong>
-                <p>{user.email}</p>
-              </div>
-            </div>
-            <div className="group-row">
-              <div>
-                <strong>Роль</strong>
-                <p>{user.admin ? "Администратор" : "Пользователь"}</p>
-              </div>
-            </div>
+        <form className="panel form-stack" onSubmit={savePassword}>
+          <div className="section-title">
+            <h3>Сменить пароль</h3>
           </div>
-        </article>
+
+          <label>
+            Текущий пароль
+            <input
+              type="password"
+              required
+              value={passwordForm.currentPassword}
+              onChange={(event) =>
+                setPasswordForm((current) => ({
+                  ...current,
+                  currentPassword: event.target.value
+                }))
+              }
+            />
+          </label>
+
+          <label>
+            Новый пароль
+            <input
+              type="password"
+              required
+              minLength={6}
+              value={passwordForm.newPassword}
+              onChange={(event) =>
+                setPasswordForm((current) => ({
+                  ...current,
+                  newPassword: event.target.value
+                }))
+              }
+            />
+          </label>
+
+          <label>
+            Повторите новый пароль
+            <input
+              type="password"
+              required
+              minLength={6}
+              value={passwordForm.confirmPassword}
+              onChange={(event) =>
+                setPasswordForm((current) => ({
+                  ...current,
+                  confirmPassword: event.target.value
+                }))
+              }
+            />
+          </label>
+
+          {passwordFeedback ? <div className="feedback feedback-info">{passwordFeedback}</div> : null}
+
+          <button type="submit" className="button button-primary" disabled={passwordSaving}>
+            {passwordSaving ? "Обновляем..." : "Сменить пароль"}
+          </button>
+        </form>
+      </section>
+
+      <section className="panel form-stack">
+        <div className="section-title">
+          <h3>Выход из аккаунта</h3>
+        </div>
+        <p className="microcopy">
+          Завершает текущую сессию на этом устройстве и возвращает на экран входа.
+        </p>
+        <button type="button" className="button button-danger profile-logout-button" onClick={logout}>
+          Выйти из аккаунта
+        </button>
       </section>
     </div>
   );

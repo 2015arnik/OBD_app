@@ -288,10 +288,6 @@ export default function FriendPage() {
             </div>
             <div className="hero-stats">
               <div className="stat-card">
-                <span>Групп</span>
-                <strong>{card.groups.length}</strong>
-              </div>
-              <div className="stat-card">
                 <span>Подарков</span>
                 <strong>{card.gifts.length}</strong>
               </div>

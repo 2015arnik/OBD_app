@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: obd-postgres
+    environment:
+      POSTGRES_DB: obd
+      POSTGRES_USER: obd
+      POSTGRES_PASSWORD: obd
+    ports:
+      - "5432:5432"
+    volumes:
+      - obd_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U obd -d obd"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  obd_postgres_data:

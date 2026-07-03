@@ -10,6 +10,7 @@ const registerInitialState = {
   name: "",
   email: "",
   password: "",
+  confirmPassword: "",
   birthDate: ""
 };
 
@@ -23,11 +24,25 @@ export default function AuthPage() {
 
   const submit = async (event) => {
     event.preventDefault();
-    setPending(true);
     setError("");
 
+    if (mode === "register" && registerForm.password !== registerForm.confirmPassword) {
+      setError("Пароли не совпадают.");
+      return;
+    }
+
+    setPending(true);
+
     const action = mode === "login" ? login : register;
-    const payload = mode === "login" ? loginForm : registerForm;
+    const payload =
+      mode === "login"
+        ? loginForm
+        : {
+            name: registerForm.name,
+            email: registerForm.email,
+            password: registerForm.password,
+            birthDate: registerForm.birthDate
+          };
     const result = await action(payload);
 
     setPending(false);
@@ -47,26 +62,7 @@ export default function AuthPage() {
             <strong>OBD</strong>
           </div>
         </div>
-        <p className="eyebrow">Веб-платформа для хакатона</p>
         <h1>Следите за днями рождения, готовьте подарки и обсуждайте их в одном месте.</h1>
-        <p>
-          Интерфейс собран под реальное API проекта: списки друзей, группы, вишлисты,
-          уведомления и приватный чат без именинника.
-        </p>
-        <div className="auth-metrics">
-          <div className="metric-card">
-            <strong>7 сценариев</strong>
-            <span>закрываются из браузера</span>
-          </div>
-          <div className="metric-card">
-            <strong>Realtime chat</strong>
-            <span>через WebSocket</span>
-          </div>
-          <div className="metric-card">
-            <strong>PWA-ready</strong>
-            <span>можно ставить на телефон</span>
-          </div>
-        </div>
       </div>
 
       <div className="auth-panel">
@@ -89,7 +85,7 @@ export default function AuthPage() {
 
         <form className="panel auth-form" onSubmit={submit}>
           <div>
-            <p className="eyebrow">{mode === "login" ? "С возвращением" : "Создаём аккаунт"}</p>
+            <p className="eyebrow">{mode === "login" ? "С возвращением" : "создать аккаунт"}</p>
             <h2>{mode === "login" ? "Войти в OBD" : "Подключиться к системе"}</h2>
           </div>
 
@@ -133,6 +129,23 @@ export default function AuthPage() {
               }
             />
           </label>
+
+          {mode === "register" ? (
+            <label>
+              Подтвердите пароль
+              <input
+                required
+                type="password"
+                value={registerForm.confirmPassword}
+                onChange={(event) =>
+                  setRegisterForm((current) => ({
+                    ...current,
+                    confirmPassword: event.target.value
+                  }))
+                }
+              />
+            </label>
+          ) : null}
 
           {mode === "register" ? (
             <label>

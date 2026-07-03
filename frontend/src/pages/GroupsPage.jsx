@@ -54,6 +54,19 @@ export default function GroupsPage() {
     }
   };
 
+  const toggleMembers = (groupId) => {
+    if (membersByGroup[groupId]) {
+      setMembersByGroup((current) => {
+        const next = { ...current };
+        delete next[groupId];
+        return next;
+      });
+      return;
+    }
+
+    loadMembers(groupId);
+  };
+
   const createGroup = async (event) => {
     event.preventDefault();
 
@@ -202,9 +215,6 @@ export default function GroupsPage() {
             <article key={group.id} className="panel person-card">
               <div className="person-card-top">
                 <div>
-                  <p className="eyebrow">
-                    {isCreator ? "Вы создали" : "Открытая группа"}
-                  </p>
                   <h3>{group.name}</h3>
                 </div>
                 <span className="day-pill">
@@ -240,8 +250,12 @@ export default function GroupsPage() {
                 >
                   {subscription ? "Отключить подписку" : "Подписаться"}
                 </button>
-                <button type="button" className="button button-ghost" onClick={() => loadMembers(group.id)}>
-                  Показать участников
+                <button
+                  type="button"
+                  className="button button-ghost"
+                  onClick={() => toggleMembers(group.id)}
+                >
+                  {members ? "Скрыть участников" : "Показать участников"}
                 </button>
               </div>
 

@@ -11,5 +11,8 @@ dist/
 .expo/
 # OS
 .DS_Store
+# Local env
+.env
+backend/.env
 # leftover duplicate clone (delete it manually on your Mac)
 /OBD_app/

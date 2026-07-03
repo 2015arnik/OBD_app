@@ -86,7 +86,12 @@ function ProtectedLayout() {
   }
 
   return (
-    <AppShell user={user} unreadCount={unreadCount} onLogout={logout}>
+    <AppShell
+      user={user}
+      unreadCount={unreadCount}
+      onLogout={logout}
+      refreshUnreadCount={refreshUnreadCount}
+    >
       <Outlet context={{ refreshUnreadCount }} />
     </AppShell>
   );
