@@ -1,6 +1,7 @@
 import axios from "axios";
 
 export const TOKEN_STORAGE_KEY = "obd-auth-token";
+export const AUTH_INVALID_EVENT = "obd-auth-invalid";
 const fallbackHost =
   typeof window !== "undefined" ? window.location.hostname || "localhost" : "localhost";
 const fallbackProtocol =
@@ -24,6 +25,17 @@ api.interceptors.request.use((config) => {
 
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error?.response?.status === 401 && typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent(AUTH_INVALID_EVENT));
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 export function extractApiError(error) {
   if (error?.code === "ERR_NETWORK") {

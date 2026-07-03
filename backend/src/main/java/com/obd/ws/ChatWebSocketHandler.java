@@ -41,8 +41,12 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         Long targetUserId = extractTargetUserId(uri);
         Long authorId = jwtService.parseUserId(extractToken(uri));
 
-        if (targetUserId == null || authorId == null) {
-            session.close(CloseStatus.POLICY_VIOLATION);
+        if (targetUserId == null) {
+            session.close(CloseStatus.POLICY_VIOLATION.withReason("Invalid chat target"));
+            return;
+        }
+        if (authorId == null) {
+            session.close(CloseStatus.POLICY_VIOLATION.withReason("Invalid token"));
             return;
         }
         if (authorId.equals(targetUserId)) {
@@ -51,7 +55,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         }
         User author = users.findById(authorId).orElse(null);
         if (author == null) {
-            session.close(CloseStatus.POLICY_VIOLATION);
+            session.close(CloseStatus.POLICY_VIOLATION.withReason("User not found"));
             return;
         }
         session.getAttributes().put("targetUserId", targetUserId);

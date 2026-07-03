@@ -10,8 +10,16 @@ import {
   formatDateTime,
   formatDaysUntilBirthday,
   formatFullDate,
+  formatIsoDate,
   formatMoney
 } from "../lib/format";
+
+const CHAT_STATUS_LABELS = {
+  closed: "Отключён",
+  connecting: "Подключаемся",
+  open: "Подключён",
+  reconnecting: "Переподключаемся"
+};
 
 function updateGiftStatusLocally(card, updatedGift) {
   if (!card) {
@@ -26,7 +34,7 @@ function updateGiftStatusLocally(card, updatedGift) {
 
 export default function FriendPage() {
   const { id } = useParams();
-  const { token, user } = useAuth();
+  const { logout, token, user } = useAuth();
   const [card, setCard] = useState(null);
   const [subscriptions, setSubscriptions] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -36,8 +44,10 @@ export default function FriendPage() {
   const [pageError, setPageError] = useState("");
   const [chatError, setChatError] = useState("");
   const [chatState, setChatState] = useState("closed");
+  const [chatConnectionNonce, setChatConnectionNonce] = useState(0);
   const [feedback, setFeedback] = useState("");
   const socketRef = useRef(null);
+  const reconnectTimeoutRef = useRef(null);
 
   const isOwnCard = Number(id) === user.id;
   const userSubscription = subscriptions.find(
@@ -101,31 +111,90 @@ export default function FriendPage() {
     });
   });
 
+  const scheduleReconnect = useEffectEvent((message) => {
+    if (reconnectTimeoutRef.current) {
+      window.clearTimeout(reconnectTimeoutRef.current);
+    }
+
+    setChatState("reconnecting");
+    setChatError(message);
+    reconnectTimeoutRef.current = window.setTimeout(() => {
+      reconnectTimeoutRef.current = null;
+      setChatConnectionNonce((current) => current + 1);
+    }, 2000);
+  });
+
   useEffect(() => {
     if (isOwnCard || !token) {
       return undefined;
     }
 
     const socket = new WebSocket(getWebSocketUrl(id, token));
-    socketRef.current = socket;
-    setChatState("connecting");
-    setChatError("");
+    let ignoreSocketEvents = false;
 
-    socket.onopen = () => setChatState("open");
+    socketRef.current = socket;
+    setChatState(chatConnectionNonce > 0 ? "reconnecting" : "connecting");
+    if (chatConnectionNonce === 0) {
+      setChatError("");
+    }
+
+    socket.onopen = () => {
+      if (ignoreSocketEvents || socketRef.current !== socket) {
+        return;
+      }
+
+      setChatState("open");
+      setChatError("");
+    };
     socket.onmessage = handleIncomingMessage;
-    socket.onerror = () => setChatError("Не удалось подключиться к WebSocket-чату.");
+    socket.onerror = () => {
+      if (ignoreSocketEvents || socketRef.current !== socket || socket.readyState === WebSocket.OPEN) {
+        return;
+      }
+
+      setChatError("Не удалось подключиться к WebSocket-чату. Пробуем ещё раз...");
+    };
     socket.onclose = (event) => {
-      setChatState("closed");
-      if (event.reason) {
+      if (ignoreSocketEvents || socketRef.current !== socket) {
+        return;
+      }
+
+      socketRef.current = null;
+      if (event.reason === "User not found" || event.reason === "Invalid token") {
+        setChatState("closed");
+        setChatError("Сессия устарела после перезапуска сервера. Войдите заново.");
+        logout();
+      } else if (event.reason) {
+        setChatState("closed");
         setChatError(event.reason);
+      } else if (event.code !== 1000) {
+        scheduleReconnect("Соединение с чатом потеряно. Пробуем переподключиться...");
+      } else {
+        setChatState("closed");
       }
     };
 
     return () => {
+      ignoreSocketEvents = true;
+      if (reconnectTimeoutRef.current) {
+        window.clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
       socket.close();
-      socketRef.current = null;
+      if (socketRef.current === socket) {
+        socketRef.current = null;
+      }
     };
-  }, [handleIncomingMessage, id, isOwnCard, token]);
+  }, [chatConnectionNonce, handleIncomingMessage, id, isOwnCard, logout, scheduleReconnect, token]);
+
+  const retryChatConnection = () => {
+    if (reconnectTimeoutRef.current) {
+      window.clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+    setChatError("");
+    setChatConnectionNonce((current) => current + 1);
+  };
 
   const toggleUserSubscription = async () => {
     try {
@@ -134,14 +203,14 @@ export default function FriendPage() {
         setSubscriptions((current) =>
           current.filter((item) => item.id !== userSubscription.id)
         );
-        setFeedback("Подписка на друга снята.");
+        setFeedback("Пользователь убран из друзей.");
       } else {
         const response = await api.post("/subscriptions", {
           targetType: "USER",
           targetId: Number(id)
         });
         setSubscriptions((current) => [...current, response.data]);
-        setFeedback("Подписка на друга включена.");
+        setFeedback("Пользователь добавлен в друзья.");
       }
     } catch (requestError) {
       setFeedback(extractApiError(requestError));
@@ -170,6 +239,15 @@ export default function FriendPage() {
     setChatText("");
   };
 
+  const openGoogleCalendar = async () => {
+    try {
+      const response = await api.get(`/users/${id}/calendar/google`);
+      window.open(response.data.url, "_blank", "noopener,noreferrer");
+    } catch (requestError) {
+      setFeedback(extractApiError(requestError));
+    }
+  };
+
   return (
     <div className="page-stack">
       <PageHeader
@@ -178,7 +256,7 @@ export default function FriendPage() {
         actions={
           <div className="cluster">
             <Link className="button button-ghost" to="/people">
-              Ко всем людям
+              Ко всем друзьям
             </Link>
             {isOwnCard ? (
               <Link className="button button-primary" to="/wishlist">
@@ -186,7 +264,7 @@ export default function FriendPage() {
               </Link>
             ) : (
               <button type="button" className="button button-primary" onClick={toggleUserSubscription}>
-                {userSubscription ? "Выключить подписку" : "Подписаться"}
+                {userSubscription ? "Убрать из друзей" : "Добавить в друзья"}
               </button>
             )}
           </div>
@@ -226,6 +304,17 @@ export default function FriendPage() {
                 <div className="section-title">
                   <h3>О человеке</h3>
                   <span className="day-pill">{formatFullDate(card.birthDate)}</span>
+                </div>
+                <div className="card-actions">
+                  <a className="button button-ghost" href={`${api.defaults.baseURL}/users/${id}/calendar.ics`} target="_blank" rel="noreferrer">
+                    Скачать .ics
+                  </a>
+                  <button type="button" className="button button-ghost" onClick={openGoogleCalendar}>
+                    Google Calendar
+                  </button>
+                  <Link className="button button-ghost" to="/fundraisers">
+                    Открыть сборы
+                  </Link>
                 </div>
                 <div className="group-list">
                   {card.groups.length > 0 ? (
@@ -322,7 +411,9 @@ export default function FriendPage() {
                   </p>
                 </div>
                 {!isOwnCard ? (
-                  <span className={`socket-pill socket-${chatState}`}>{chatState}</span>
+                  <span className={`socket-pill socket-${chatState}`}>
+                    {CHAT_STATUS_LABELS[chatState] ?? chatState}
+                  </span>
                 ) : null}
               </div>
 
@@ -334,6 +425,13 @@ export default function FriendPage() {
               ) : (
                 <>
                   {chatError ? <div className="feedback feedback-error">{chatError}</div> : null}
+                  {chatState !== "open" ? (
+                    <div className="card-actions">
+                      <button type="button" className="button button-ghost" onClick={retryChatConnection}>
+                        Повторить подключение
+                      </button>
+                    </div>
+                  ) : null}
 
                   <div className="chat-feed">
                     {chatLoading ? (
@@ -373,7 +471,7 @@ export default function FriendPage() {
                     <button
                       type="submit"
                       className="button button-primary"
-                      disabled={!chatText.trim()}
+                      disabled={!chatText.trim() || chatState !== "open"}
                     >
                       Отправить сообщение
                     </button>

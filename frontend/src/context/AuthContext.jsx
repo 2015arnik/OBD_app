@@ -1,5 +1,5 @@
 import { createContext, startTransition, useContext, useEffect, useState } from "react";
-import { api, extractApiError, TOKEN_STORAGE_KEY } from "../lib/api";
+import { api, AUTH_INVALID_EVENT, extractApiError, TOKEN_STORAGE_KEY } from "../lib/api";
 
 const AuthContext = createContext(null);
 
@@ -44,6 +44,20 @@ export function AuthProvider({ children }) {
 
     run();
   }, [token]);
+
+  useEffect(() => {
+    const handleInvalidAuth = () => {
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+      startTransition(() => {
+        setToken(null);
+        setUser(null);
+        setBootstrapping(false);
+      });
+    };
+
+    window.addEventListener(AUTH_INVALID_EVENT, handleInvalidAuth);
+    return () => window.removeEventListener(AUTH_INVALID_EVENT, handleInvalidAuth);
+  }, []);
 
   const persistSession = (nextToken, nextUser) => {
     localStorage.setItem(TOKEN_STORAGE_KEY, nextToken);

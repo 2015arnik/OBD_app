@@ -63,29 +63,68 @@ public class DataSeeder implements CommandLineRunner {
         User sveta = user("Света Орлова", "sveta@obd.app", bday(today, 1), false);
         User igor = user("Игорь Волков", "igor@obd.app", bday(today, 30), false);
         User katya = user("Катя Новикова", "katya@obd.app", bday(today, 160), false);
+        User olga = user("Ольга Миронова", "olga@obd.app", bday(today, 12), false);
+        User dima = user("Дмитрий Соколов", "dima@obd.app", bday(today, 18), false);
+        User marina = user("Марина Белова", "marina@obd.app", bday(today, 24), false);
+        User pavel = user("Павел Егоров", "pavel@obd.app", bday(today, 42), false);
+        User lena = user("Елена Громова", "lena@obd.app", bday(today, 56), false);
+        User artem = user("Артём Лебедев", "artem@obd.app", bday(today, 75), false);
         User admin = user("Администратор", "admin@obd.app", bday(today, 90), true);
 
         Group tsu = group("972501 ТГУ", "Учебная группа первого курса", anna.getId());
         Group volley = group("Сборная по волейболу", "Тренировки по вторникам и четвергам", boris.getId());
+        Group office = group("Команда продукта", "Рабочая команда, которая готовит сюрпризы коллегам", olga.getId());
+        Group board = group("Настолки по пятницам", "Друзья, которые любят настольные игры и совместные подарки", marina.getId());
 
         join(anna, tsu);
         join(boris, tsu);
         join(sveta, tsu);
+        join(katya, tsu);
+        join(dima, tsu);
         join(boris, volley);
         join(igor, volley);
         join(anna, volley);
+        join(pavel, volley);
+        join(olga, office);
+        join(lena, office);
+        join(admin, office);
+        join(marina, board);
+        join(artem, board);
+        join(anna, board);
 
         gift(boris, "Механическая клавиатура", "Тактильная, коричневые свитчи", "https://example.com/keyboard", 7000);
         gift(boris, "Книга по алгоритмам", "CLRS на русском", "https://example.com/clrs", 3000);
         gift(anna, "Беспроводные наушники", "С активным шумоподавлением", "https://example.com/headphones", 12000);
         gift(sveta, "Набор для рисования", "Акварель и кисти", null, 2500);
+        gift(igor, "Фитнес-браслет", "С трекингом сна и пульса", "https://example.com/band", 5500);
+        gift(katya, "Сертификат в книжный", "Любит бумажные книги и красивую канцелярию", null, 4000);
+        gift(olga, "Курс по керамике", "Серия творческих мастер-классов", "https://example.com/ceramics", 6500);
+        gift(dima, "LEGO Technic", "Любая сложная инженерная модель", "https://example.com/lego", 9800);
+        gift(marina, "Планшет для заметок", "Для работы и быстрых скетчей", "https://example.com/tablet", 11000);
+        gift(pavel, "Футбольный мяч", "Профессиональный размер 5", null, 3500);
+        gift(lena, "Кофемолка", "Компактная электрическая модель", "https://example.com/coffee", 7200);
+        gift(artem, "Подписка на музыку", "Годовой премиум-тариф", null, 2500);
+
+        gift(anna, "Плед крупной вязки", "Светлый и очень мягкий", null, 4500);
+        gift(sveta, "Набор маркеров", "Для скетчинга и иллюстраций", "https://example.com/markers", 1800);
+        gift(olga, "Парфюм", "Свежий цитрусовый аромат", null, 9000);
+        gift(dima, "Игровая мышь", "Лёгкая, с хорошим сенсором", "https://example.com/mouse", 4300);
+        gift(lena, "Тёплый халат", "Домашний и уютный", null, 5000);
 
         subscribe(anna, SubscriptionTargetType.USER, boris.getId());
+        subscribe(anna, SubscriptionTargetType.USER, sveta.getId());
+        subscribe(anna, SubscriptionTargetType.USER, olga.getId());
+        subscribe(anna, SubscriptionTargetType.USER, marina.getId());
         subscribe(anna, SubscriptionTargetType.GROUP, volley.getId());
+        subscribe(anna, SubscriptionTargetType.GROUP, board.getId());
         subscribe(igor, SubscriptionTargetType.USER, boris.getId());
+        subscribe(olga, SubscriptionTargetType.USER, lena.getId());
+        subscribe(marina, SubscriptionTargetType.USER, artem.getId());
+        subscribe(dima, SubscriptionTargetType.GROUP, tsu.getId());
 
         notify(anna.getId(), "Через 7 дн. день рождения у Борис Ким.", "/friends/" + boris.getId());
-        notify(anna.getId(), "Скоро дни рождения в группе «Сборная по волейболу».", "/groups");
+        notify(olga.getId(), "Через 56 дн. день рождения у Елена Громова.", "/friends/" + lena.getId());
+        notify(marina.getId(), "Через 75 дн. день рождения у Артём Лебедев.", "/friends/" + artem.getId());
 
         Fundraiser f = new Fundraiser();
         f.setTargetUserId(boris.getId());
@@ -98,6 +137,18 @@ public class DataSeeder implements CommandLineRunner {
 
         contribution(f.getId(), anna.getId(), 1500);
         contribution(f.getId(), igor.getId(), 1000);
+
+        Fundraiser officeFundraiser = new Fundraiser();
+        officeFundraiser.setTargetUserId(lena.getId());
+        officeFundraiser.setTitle("Сбор на кофемолку для Лены");
+        officeFundraiser.setGoalAmount(7200);
+        officeFundraiser.setCollectedAmount(3000);
+        officeFundraiser.setStatus(FundraiserStatus.OPEN);
+        officeFundraiser.setDeadline(today.plusDays(10));
+        officeFundraiser = fundraisers.save(officeFundraiser);
+
+        contribution(officeFundraiser.getId(), olga.getId(), 2000);
+        contribution(officeFundraiser.getId(), marina.getId(), 1000);
     }
 
     private LocalDate bday(LocalDate today, int daysAhead) {

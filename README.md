@@ -5,7 +5,7 @@
 подарка (без именинника), автосбор средств через мок-банк и календарь.
 
 ## Стек
-- Бэкенд: Java 17 + Spring Boot 3 (Spring Web, Spring Data JPA + H2, Spring WebSocket, `@Scheduled`, JWT + BCrypt, springdoc/Swagger). Без Lombok.
+- Бэкенд: Java 17 + Spring Boot 3 (Spring Web, Spring Data JPA + H2/PostgreSQL, Spring WebSocket, `@Scheduled`, JWT + BCrypt, springdoc/Swagger). Без Lombok.
 - Веб: React 19 + Vite + PWA (папка `frontend/`).
 - Мобильное (iOS/Android): React Native + Expo (позже).
 
@@ -17,6 +17,26 @@ mvn spring-boot:run
 ```
 - API: `http://localhost:8080`, Swagger: `http://localhost:8080/swagger-ui.html`
 - Консоль БД: `http://localhost:8080/h2-console` (JDBC URL `jdbc:h2:mem:obd`, user `sa`)
+
+По умолчанию используется профиль `h2`.
+
+### Запуск с PostgreSQL
+Нужна база, например:
+- DB: `obd`
+- user: `obd`
+- password: `obd`
+
+Запуск:
+```bash
+cd backend
+SPRING_PROFILES_ACTIVE=postgres \
+POSTGRES_URL=jdbc:postgresql://localhost:5432/obd \
+POSTGRES_USER=obd \
+POSTGRES_PASSWORD=obd \
+mvn spring-boot:run
+```
+
+Для фронта ничего менять не нужно: API остаётся на тех же URL.
 
 ## Запуск фронтенда
 ```

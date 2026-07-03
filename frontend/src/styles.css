@@ -271,6 +271,16 @@ label {
   background: rgba(255, 255, 255, 0.52);
 }
 
+.profile-pill-link {
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.profile-pill-link:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.68);
+  border-color: var(--line-strong);
+}
+
 .profile-pill p {
   margin: 0.2rem 0 0;
   color: var(--muted);
@@ -341,6 +351,14 @@ label {
   gap: 0.75rem;
 }
 
+.page-actions-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: end;
+  justify-content: flex-end;
+}
+
 .search-box {
   width: min(100%, 280px);
 }
@@ -401,7 +419,9 @@ label {
 .gift-list,
 .group-list,
 .column-stack,
-.form-stack {
+.form-stack,
+.section-stack,
+.progress-stack {
   display: grid;
   gap: 1rem;
 }
@@ -430,6 +450,31 @@ label {
   display: block;
   font-size: 1.5rem;
   margin-top: 0.2rem;
+}
+
+.progress-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(124, 92, 255, 0.12);
+  overflow: hidden;
+}
+
+.progress-bar-large {
+  height: 16px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--accent-warm), var(--accent-sun), var(--accent));
 }
 
 .facts-grid {
@@ -469,6 +514,14 @@ label {
 
 .socket-connecting {
   color: var(--warn);
+}
+
+.socket-reconnecting {
+  color: var(--warn);
+}
+
+.socket-closed {
+  color: var(--accent-warm);
 }
 
 .cards-grid {
@@ -521,7 +574,8 @@ label {
 .notification-row,
 .gift-card,
 .chat-message,
-.empty-state {
+.empty-state,
+.mock-bank-card {
   padding: 1rem;
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.62);
@@ -579,6 +633,36 @@ label {
 
 .chat-message p {
   margin: 0.4rem 0 0;
+}
+
+.mock-bank-panel {
+  background:
+    radial-gradient(circle at top right, rgba(255, 122, 168, 0.12), transparent 32%),
+    linear-gradient(135deg, rgba(255, 251, 255, 0.72), rgba(247, 241, 255, 0.82));
+}
+
+.mock-bank-card {
+  display: grid;
+  gap: 0.9rem;
+  background:
+    linear-gradient(135deg, rgba(255, 246, 250, 0.96), rgba(246, 240, 255, 0.96));
+}
+
+.mock-bank-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.mock-bank-meta {
+  display: grid;
+  gap: 0.5rem;
+  color: var(--muted);
+}
+
+.mock-bank-meta strong {
+  color: var(--text);
 }
 
 .feedback {
@@ -750,7 +834,8 @@ label {
   .hero-card,
   .section-title,
   .person-card-top,
-  .notification-row {
+  .notification-row,
+  .mock-bank-row {
     flex-direction: column;
     align-items: stretch;
   }

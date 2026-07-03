@@ -53,7 +53,7 @@ export default function NotificationsPage() {
     <div className="page-stack">
       <PageHeader
         title="Уведомления"
-        description="Здесь собираются все напоминания о днях рождения и будущих сценариях со сборами."
+        description="Здесь собираются напоминания о днях рождения друзей и участников групп, на которые вы подписаны."
         actions={
           <span className="day-pill">
             {notifications.filter((item) => !item.read).length} непрочитанных
@@ -69,7 +69,7 @@ export default function NotificationsPage() {
         {!loading && notifications.length === 0 ? (
           <EmptyState
             title="Уведомлений пока нет"
-            description="Когда заработает планировщик, здесь появятся напоминания о ближайших днях рождения."
+            description="Здесь появятся напоминания о ближайших днях рождения ваших друзей и участников выбранных групп."
           />
         ) : null}
 

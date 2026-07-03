@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -37,6 +38,14 @@ public class GroupController {
         return groups.findAll();
     }
 
+    @GetMapping("/mine")
+    public List<Long> myGroupIds(@CurrentUser User me) {
+        return memberships.findByUserId(me.getId()).stream()
+                .map(GroupMembership::getGroupId)
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
     @PostMapping
     public Group create(@Valid @RequestBody CreateGroupRequest req, @CurrentUser User me) {
         Group g = new Group();
@@ -58,6 +67,22 @@ public class GroupController {
             memberships.save(new GroupMembership(me.getId(), id));
         }
         return g;
+    }
+
+    @DeleteMapping("/{id}/leave")
+    public void leave(@PathVariable Long id, @CurrentUser User me) {
+        Group g = groups.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Group not found"));
+        if (g.getCreatorId().equals(me.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Создатель группы пока не может выйти из неё"
+            );
+        }
+        memberships.findByUserId(me.getId()).stream()
+                .filter(membership -> membership.getGroupId().equals(id))
+                .findFirst()
+                .ifPresent(membership -> memberships.deleteById(membership.getId()));
     }
 
     @GetMapping("/{id}/members")

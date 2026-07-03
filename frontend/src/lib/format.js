@@ -34,6 +34,18 @@ export function formatDateTime(dateString) {
   }).format(new Date(dateString));
 }
 
+export function formatIsoDate(dateString) {
+  if (!dateString) {
+    return "Не указан";
+  }
+
+  return new Intl.DateTimeFormat("ru-RU", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  }).format(new Date(dateString));
+}
+
 export function formatMoney(value) {
   if (value === null || value === undefined || Number.isNaN(Number(value))) {
     return "Цена не указана";

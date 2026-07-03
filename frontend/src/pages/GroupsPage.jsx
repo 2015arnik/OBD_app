@@ -13,6 +13,7 @@ const newGroupInitialState = {
 export default function GroupsPage() {
   const { user } = useAuth();
   const [groups, setGroups] = useState([]);
+  const [myGroupIds, setMyGroupIds] = useState([]);
   const [membersByGroup, setMembersByGroup] = useState({});
   const [subscriptions, setSubscriptions] = useState([]);
   const [groupForm, setGroupForm] = useState(newGroupInitialState);
@@ -22,12 +23,14 @@ export default function GroupsPage() {
   useEffect(() => {
     const loadGroups = async () => {
       try {
-        const [groupsResponse, subscriptionsResponse] = await Promise.all([
+        const [groupsResponse, subscriptionsResponse, myProfileResponse] = await Promise.all([
           api.get("/groups"),
-          api.get("/subscriptions")
+          api.get("/subscriptions"),
+          api.get(`/users/${user.id}`)
         ]);
         setGroups(groupsResponse.data);
         setSubscriptions(subscriptionsResponse.data);
+        setMyGroupIds(myProfileResponse.data.groups.map((group) => group.id));
       } catch (requestError) {
         setFeedback(extractApiError(requestError));
       } finally {
@@ -36,7 +39,7 @@ export default function GroupsPage() {
     };
 
     loadGroups();
-  }, []);
+  }, [user.id]);
 
   const loadMembers = async (groupId) => {
     if (membersByGroup[groupId]) {
@@ -57,6 +60,7 @@ export default function GroupsPage() {
     try {
       const response = await api.post("/groups", groupForm);
       setGroups((current) => [response.data, ...current]);
+      setMyGroupIds((current) => [...new Set([...current, response.data.id])]);
       setGroupForm(newGroupInitialState);
       setFeedback("Группа создана. Вы автоматически стали участником.");
     } catch (requestError) {
@@ -67,9 +71,30 @@ export default function GroupsPage() {
   const joinGroup = async (groupId) => {
     try {
       await api.post(`/groups/${groupId}/join`);
+      setMyGroupIds((current) => [...new Set([...current, groupId])]);
       const response = await api.get(`/groups/${groupId}/members`);
       setMembersByGroup((current) => ({ ...current, [groupId]: response.data }));
       setFeedback("Вы в группе. Состав участников обновлён.");
+    } catch (requestError) {
+      setFeedback(extractApiError(requestError));
+    }
+  };
+
+  const leaveGroup = async (groupId) => {
+    try {
+      await api.delete(`/groups/${groupId}/leave`);
+      setMyGroupIds((current) => current.filter((id) => id !== groupId));
+      setMembersByGroup((current) => {
+        if (!current[groupId]) {
+          return current;
+        }
+
+        return {
+          ...current,
+          [groupId]: current[groupId].filter((member) => member.id !== user.id)
+        };
+      });
+      setFeedback("Вы вышли из группы.");
     } catch (requestError) {
       setFeedback(extractApiError(requestError));
     }
@@ -102,7 +127,7 @@ export default function GroupsPage() {
     <div className="page-stack">
       <PageHeader
         title="Группы"
-        description="Общий каталог групп, вступление в сообщества и подписки на уведомления сразу по нескольким людям."
+        description="Общий каталог групп, вступление в сообщества и подписки на дни рождения участников."
       />
 
       {feedback ? <div className="feedback feedback-info">{feedback}</div> : null}
@@ -148,8 +173,9 @@ export default function GroupsPage() {
           <p className="eyebrow">Как использовать</p>
           <h3>Групповые подписки экономят время.</h3>
           <p>
-            Если вы подписываетесь на группу, система позже сможет присылать уведомления сразу
-            по всем её участникам. Это закрывает одно из ключевых требований ТЗ.
+            Если вы подписываетесь на группу, в уведомления начнут приходить напоминания
+            о ближайших днях рождения её участников. Это удобно для учебных, рабочих
+            и дружеских компаний.
           </p>
         </div>
       </section>
@@ -169,14 +195,15 @@ export default function GroupsPage() {
           const subscription = subscriptions.find(
             (item) => item.targetType === "GROUP" && Number(item.targetId) === Number(group.id)
           );
-          const includesMe = members?.some((member) => member.id === user.id);
+          const includesMe = myGroupIds.includes(group.id);
+          const isCreator = group.creatorId === user.id;
 
           return (
             <article key={group.id} className="panel person-card">
               <div className="person-card-top">
                 <div>
                   <p className="eyebrow">
-                    {group.creatorId === user.id ? "Вы создали" : "Открытая группа"}
+                    {isCreator ? "Вы создали" : "Открытая группа"}
                   </p>
                   <h3>{group.name}</h3>
                 </div>
@@ -188,9 +215,24 @@ export default function GroupsPage() {
               <p>{group.description || "Описание пока не добавлено."}</p>
 
               <div className="card-actions">
-                <button type="button" className="button button-primary" onClick={() => joinGroup(group.id)}>
-                  {includesMe ? "Состав обновить" : "Вступить"}
-                </button>
+                {includesMe ? (
+                  <button
+                    type="button"
+                    className="button button-ghost"
+                    onClick={() => leaveGroup(group.id)}
+                    disabled={isCreator}
+                  >
+                    {isCreator ? "Вы создатель" : "Выйти"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="button button-primary"
+                    onClick={() => joinGroup(group.id)}
+                  >
+                    Вступить
+                  </button>
+                )}
                 <button
                   type="button"
                   className="button button-ghost"

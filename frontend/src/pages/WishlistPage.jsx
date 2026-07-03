@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import EmptyState from "../components/EmptyState";
 import PageHeader from "../components/PageHeader";
 import StatusBadge from "../components/StatusBadge";
@@ -106,11 +107,7 @@ function GiftEditor({ gift, onDelete, onSave }) {
 }
 
 export default function WishlistPage() {
-  const { updateUser, user } = useAuth();
-  const [profileForm, setProfileForm] = useState({
-    name: user.name || "",
-    birthDate: user.birthDate || ""
-  });
+  const { user } = useAuth();
   const [giftForm, setGiftForm] = useState(newGiftInitialState);
   const [gifts, setGifts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -130,21 +127,6 @@ export default function WishlistPage() {
 
     loadGifts();
   }, [user.id]);
-
-  const saveProfile = async (event) => {
-    event.preventDefault();
-
-    try {
-      const response = await api.patch(`/users/${user.id}`, {
-        ...profileForm,
-        birthDate: profileForm.birthDate ? profileForm.birthDate : null
-      });
-      updateUser(response.data);
-      setFeedback("Профиль обновлён.");
-    } catch (requestError) {
-      setFeedback(extractApiError(requestError));
-    }
-  };
 
   const addGift = async (event) => {
     event.preventDefault();
@@ -188,47 +170,19 @@ export default function WishlistPage() {
     <div className="page-stack">
       <PageHeader
         title="Мой вишлист"
-        description="Здесь вы редактируете свой профиль и список желаемых подарков. Все изменения сразу попадают в общую систему."
+        description="Здесь живут только ваши подарки: добавление, редактирование и удаление позиций, которые увидят друзья."
+        actions={
+          <div className="cluster">
+            <Link className="button button-ghost" to="/profile">
+              Редактировать профиль
+            </Link>
+          </div>
+        }
       />
 
       {feedback ? <div className="feedback feedback-info">{feedback}</div> : null}
 
       <section className="two-column-layout">
-        <form className="panel form-stack" onSubmit={saveProfile}>
-          <div className="section-title">
-            <h3>Мой профиль</h3>
-            <span className="microcopy">{`PATCH /users/${user.id}`}</span>
-          </div>
-
-          <label>
-            Имя
-            <input
-              value={profileForm.name}
-              onChange={(event) =>
-                setProfileForm((current) => ({ ...current, name: event.target.value }))
-              }
-            />
-          </label>
-
-          <label>
-            Дата рождения
-            <input
-              type="date"
-              value={profileForm.birthDate || ""}
-              onChange={(event) =>
-                setProfileForm((current) => ({
-                  ...current,
-                  birthDate: event.target.value
-                }))
-              }
-            />
-          </label>
-
-          <button type="submit" className="button button-primary">
-            Сохранить профиль
-          </button>
-        </form>
-
         <form className="panel form-stack" onSubmit={addGift}>
           <div className="section-title">
             <h3>Добавить подарок</h3>
@@ -286,6 +240,15 @@ export default function WishlistPage() {
             Добавить в список
           </button>
         </form>
+
+        <article className="panel spotlight-card">
+          <p className="eyebrow">Как это работает</p>
+          <h3>Ваши друзья увидят этот список в карточке профиля.</h3>
+          <p>
+            Личные данные теперь редактируются отдельно в профиле, а здесь можно спокойно
+            собирать и поддерживать только список желаемых подарков.
+          </p>
+        </article>
       </section>
 
       <section className="panel">

@@ -10,10 +10,14 @@ import AppShell from "./components/AppShell";
 import { useAuth } from "./context/AuthContext";
 import { api } from "./lib/api";
 import AuthPage from "./pages/AuthPage";
+import AdminPage from "./pages/AdminPage";
 import FriendPage from "./pages/FriendPage";
+import FundraiserDetailPage from "./pages/FundraiserDetailPage";
+import FundraisersPage from "./pages/FundraisersPage";
 import GroupsPage from "./pages/GroupsPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import PeoplePage from "./pages/PeoplePage";
+import ProfilePage from "./pages/ProfilePage";
 import WishlistPage from "./pages/WishlistPage";
 
 function SplashScreen() {
@@ -94,11 +98,15 @@ export default function App() {
       <Route path="/auth" element={<PublicOnlyRoute />} />
       <Route element={<ProtectedLayout />}>
         <Route index element={<Navigate to="/people" replace />} />
+        <Route path="/profile" element={<ProfilePage />} />
         <Route path="/people" element={<PeoplePage />} />
         <Route path="/friends/:id" element={<FriendPage />} />
         <Route path="/wishlist" element={<WishlistPage />} />
         <Route path="/groups" element={<GroupsPage />} />
+        <Route path="/fundraisers" element={<FundraisersPage />} />
+        <Route path="/fundraisers/:id" element={<FundraiserDetailPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
+        <Route path="/admin" element={<AdminPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
