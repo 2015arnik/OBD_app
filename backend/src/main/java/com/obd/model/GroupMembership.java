@@ -1,9 +1,6 @@
 package com.obd.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 /**
  * Links a user to a group (many-to-many, kept as an explicit table on purpose:
@@ -12,8 +9,8 @@ import lombok.Setter;
 @Entity
 @Table(name = "group_memberships",
        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "group_id"}))
-@Getter @Setter @NoArgsConstructor
 public class GroupMembership {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -21,8 +18,20 @@ public class GroupMembership {
     private Long userId;
     private Long groupId;
 
+    public GroupMembership() {
+    }
+
     public GroupMembership(Long userId, Long groupId) {
         this.userId = userId;
         this.groupId = groupId;
     }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
+
+    public Long getGroupId() { return groupId; }
+    public void setGroupId(Long groupId) { this.groupId = groupId; }
 }

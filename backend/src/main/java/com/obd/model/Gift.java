@@ -1,15 +1,12 @@
 package com.obd.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 /** One item in a user's wishlist. */
 @Entity
 @Table(name = "gifts")
-@Getter @Setter @NoArgsConstructor
 public class Gift {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -29,4 +26,28 @@ public class Gift {
 
     @Enumerated(EnumType.STRING)
     private GiftStatus status = GiftStatus.WANTED;
+
+    public Gift() {
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public Long getOwnerId() { return ownerId; }
+    public void setOwnerId(Long ownerId) { this.ownerId = ownerId; }
+
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public String getUrl() { return url; }
+    public void setUrl(String url) { this.url = url; }
+
+    public Integer getPrice() { return price; }
+    public void setPrice(Integer price) { this.price = price; }
+
+    public GiftStatus getStatus() { return status; }
+    public void setStatus(GiftStatus status) { this.status = status; }
 }
