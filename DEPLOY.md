@@ -1,61 +1,58 @@
 # Deploy OBD
 
-Ниже схема, которая лучше всего подходит для текущего проекта:
+Ниже основной сценарий для проекта:
 
-- `frontend` публикуем на `GitHub Pages`
+- `frontend` публикуем на `Vercel`
 - `backend` поднимаем как `Render Web Service`
 - `PostgreSQL` создаём в `Render Postgres`
 
-Такой вариант хорошо подходит нам сейчас, потому что:
+Эта связка подходит нам лучше всего:
 
 - фронт уже статический и собирается через `Vite`
-- бэк на `Spring Boot 3 + Java 17` без проблем деплоится как отдельный веб-сервис
-- чат работает по обычному `WebSocket`, а бэк уже умеет строить `ws/wss` URL от `VITE_API_BASE_URL`
+- Vercel нативно поддерживает `Vite`
+- для SPA нужен только rewrite на `index.html`
+- бэк на `Spring Boot 3 + Java 17` нормально деплоится в Render
+- чат использует обычный `WebSocket`, а фронт уже строит `wss` от `VITE_API_BASE_URL`
 
-## 1. Что уже настроено в репозитории
-
-Я подготовил проект к деплою:
+## 1. Что уже подготовлено в репозитории
 
 - `frontend/vite.config.js` читает `VITE_BASE_PATH`
-- `frontend/src/main.jsx` умеет работать через `HashRouter` по `VITE_ROUTER_MODE=hash`
-- все логотипы во фронте теперь берутся через `import.meta.env.BASE_URL`
-- `.github/workflows/deploy-frontend.yml` публикует фронт на GitHub Pages
-- `backend/src/main/resources/application.properties` теперь слушает `PORT`
+- `frontend/src/main.jsx` по умолчанию работает через `BrowserRouter`
+- все логотипы во фронте используют `import.meta.env.BASE_URL`
+- `frontend/vercel.json` добавляет SPA rewrite для deep links
+- `backend/src/main/resources/application.properties` слушает `PORT`
 - `backend` читает `CORS_ALLOWED_ORIGIN_PATTERNS` и применяет его и к HTTP, и к WebSocket
 
-## 2. Деплой фронта на GitHub Pages
+## 2. Деплой фронта на Vercel
 
-### 2.1. Запушить проект в GitHub
+### 2.1. Импорт проекта
 
-Нужна ветка `main`.
+В Vercel:
 
-### 2.2. Включить GitHub Pages
+1. `Add New -> Project`
+2. подключите GitHub-репозиторий `2015arnik/OBD_app`
+3. в настройках проекта задайте:
 
-В репозитории откройте:
+- `Root Directory`: `frontend`
+- `Framework Preset`: `Vite`
 
-`Settings -> Pages -> Build and deployment -> Source -> GitHub Actions`
+Обычно Vercel сам подставляет правильные команды, но если нужно указать явно:
 
-Workflow уже лежит в `.github/workflows/deploy-frontend.yml`.
+- `Build Command`: `npm run build`
+- `Output Directory`: `dist`
 
-По умолчанию он настроен под `project page`, то есть адрес вида:
+### 2.2. Переменные окружения для фронта
 
-`https://<ваш-логин>.github.io/<repo>/`
-
-Если позже захотите публиковать фронт как `user site` (`https://<ваш-логин>.github.io/`) или через собственный домен, в workflow нужно будет поменять:
-
-- `VITE_BASE_PATH` на `/`
-
-### 2.3. Добавить переменную с URL бэка
-
-Откройте:
-
-`Settings -> Secrets and variables -> Actions -> Variables`
-
-Создайте переменную:
+В `Project -> Settings -> Environment Variables` добавьте:
 
 - `VITE_API_BASE_URL=https://your-backend.onrender.com`
+- `VITE_BASE_PATH=/`
 
-После следующего пуша GitHub сам соберёт и опубликует фронт.
+`VITE_ROUTER_MODE` для Vercel не нужен.
+
+### 2.3. Почему роуты будут работать
+
+По официальной документации Vercel для SPA на Vite нужен rewrite всех путей на `index.html`. Это уже сделано в [frontend/vercel.json](/Users/2015arnik/Desktop/OBD_app/frontend/vercel.json). Источник: [Vite on Vercel](https://vercel.com/docs/frameworks/frontend/vite)
 
 ## 3. Деплой бэка на Render
 
@@ -65,9 +62,7 @@ Workflow уже лежит в `.github/workflows/deploy-frontend.yml`.
 
 1. `New +`
 2. `PostgreSQL`
-3. задайте имя, например `obd-db`
-
-Потом Render покажет параметры подключения.
+3. имя, например `obd-db`
 
 ### 3.2. Создать Web Service
 
@@ -75,36 +70,35 @@ Workflow уже лежит в `.github/workflows/deploy-frontend.yml`.
 
 1. `New +`
 2. `Web Service`
-3. подключите ваш GitHub-репозиторий
-4. укажите:
+3. подключите этот GitHub-репозиторий
+4. задайте:
 
 - `Root Directory`: `backend`
-- `Runtime`: `Java`
-- `Build Command`: `mvn clean package -DskipTests`
-- `Start Command`: `java -jar target/obd-backend-0.0.1-SNAPSHOT.jar`
+- если Render показывает `Language = Java`, можно использовать обычный Java-сервис:
+  - `Build Command`: `mvn clean package -DskipTests`
+  - `Start Command`: `java -jar target/obd-backend-0.0.1-SNAPSHOT.jar`
+- если `Java` в списке не появляется, используйте Docker:
+  - `Environment`: `Docker`
+  - `Dockerfile Path`: `./backend/Dockerfile`
 
-### 3.3. Добавить переменные окружения
+Для нашего репозитория второй вариант особенно надёжен, потому что проект монорепозиторий и `pom.xml` лежит в `backend/`, а не в корне.
 
-В сервисе Render задайте:
+### 3.3. Переменные окружения для Render
+
+Добавьте:
 
 - `JWT_SECRET=<длинный случайный секрет минимум 32 символа>`
-- `POSTGRES_URL=<External Database URL или Internal Database URL Render>`
+- `POSTGRES_URL=<URL из Render Postgres>`
 - `POSTGRES_USER=<username из Render Postgres>`
 - `POSTGRES_PASSWORD=<password из Render Postgres>`
 - `JPA_DDL_AUTO=update`
-- `CORS_ALLOWED_ORIGIN_PATTERNS=https://<ваш-логин>.github.io`
+- `CORS_ALLOWED_ORIGIN_PATTERNS=https://<ваш-проект>.vercel.app`
 
-Если репозиторий публикуется как project page, обычно фронт будет жить по адресу:
+Если захотите, чтобы работали ещё и preview-деплои Vercel, можно расширить origin-паттерн. Это уже вывод из нашей реализации `allowedOriginPatterns`, а не требование Render:
 
-`https://<ваш-логин>.github.io/<repo>/`
+- `CORS_ALLOWED_ORIGIN_PATTERNS=https://<ваш-проект>.vercel.app,https://*.vercel.app,http://localhost:5173`
 
-Тогда можно поставить:
-
-- `CORS_ALLOWED_ORIGIN_PATTERNS=https://<ваш-логин>.github.io`
-
-Если захотите несколько origin, перечисляйте через запятую:
-
-`https://<ваш-логин>.github.io,http://localhost:5173`
+Для более строгой настройки лучше оставить только боевой домен.
 
 ## 4. Что важно для нашего проекта
 
@@ -115,15 +109,11 @@ Workflow уже лежит в `.github/workflows/deploy-frontend.yml`.
 - API: `https://your-backend.onrender.com`
 - WebSocket: `wss://your-backend.onrender.com/ws/chat/...`
 
-Фронт строит этот адрес автоматически из `VITE_API_BASE_URL`, отдельно настраивать WS URL не нужно.
+Отдельно URL для WebSocket задавать не нужно.
 
-### GitHub Pages и роуты
+### Календарные `.ics` ссылки
 
-Для Pages я включил `HashRouter`, поэтому адреса будут вида:
-
-`https://<ваш-логин>.github.io/<repo>/#/wishlist`
-
-Это самый надёжный вариант для GitHub Pages без 404 на внутренних страницах.
+Скачивание `.ics` идёт напрямую с бэка, поэтому оно тоже будет работать, если `VITE_API_BASE_URL` указывает на живой Render backend.
 
 ## 5. Локальная проверка перед деплоем
 
@@ -132,8 +122,7 @@ Workflow уже лежит в `.github/workflows/deploy-frontend.yml`.
 ```bash
 cd frontend
 VITE_API_BASE_URL=https://your-backend.onrender.com \
-VITE_ROUTER_MODE=hash \
-VITE_BASE_PATH=/OBD_app/ \
+VITE_BASE_PATH=/ \
 npm run build
 ```
 
@@ -148,26 +137,36 @@ JWT_SECRET=replace-with-a-long-secret-value \
 mvn spring-boot:run
 ```
 
+### Docker backend
+
+```bash
+docker build -t obd-backend ./backend
+docker run --rm -p 8080:8080 \
+  -e POSTGRES_URL=jdbc:postgresql://host.docker.internal:5432/obd \
+  -e POSTGRES_USER=obd \
+  -e POSTGRES_PASSWORD=obd \
+  -e JWT_SECRET=replace-with-a-long-secret-value \
+  obd-backend
+```
+
 ## 6. Минимальный чек-лист запуска
 
-1. Запушить репозиторий в GitHub
-2. Включить `GitHub Actions` для Pages
-3. Создать `Render Postgres`
-4. Создать `Render Web Service` из папки `backend`
-5. Вписать env vars в Render
-6. В GitHub добавить `VITE_API_BASE_URL`
-7. Запушить в `main`
-8. Открыть фронт на `github.io`, зарегистрироваться и проверить чат
+1. Запушить проект в GitHub
+2. Создать `Render Postgres`
+3. Создать `Render Web Service` из папки `backend`
+4. Вписать env vars в Render
+5. Создать проект в Vercel из папки `frontend`
+6. Вписать `VITE_API_BASE_URL` в Vercel
+7. Дождаться первого деплоя
+8. Открыть фронт на `vercel.app`, зарегистрироваться и проверить чат
 
-## 7. Что я рекомендую дальше
+## 7. Что можно оставить как есть
 
-После первого успешного деплоя стоит сделать ещё два небольших шага:
+- `.github/workflows/deploy-frontend.yml` можно пока не трогать
+- GitHub Pages больше не нужен для основного сценария
 
-- вынести `JWT_SECRET` в менеджер секретов и не хранить его нигде в явном виде
-- добавить отдельный production origin для `CORS_ALLOWED_ORIGIN_PATTERNS`, а не оставлять `*`
+Если захотите, следующим сообщением я могу сразу дать вам:
 
-Если хотите, следующим сообщением я могу сразу подготовить ещё и:
-
-1. `render.yaml` для автосоздания Render-сервиса и базы
-2. готовый список точных полей, которые нужно заполнить в интерфейсе Render
-3. команды `git add / commit / push`, чтобы вы сразу выкатили всё это в GitHub
+1. точный список полей для Vercel по шагам
+2. точный список полей для Render по шагам
+3. короткий чек-лист, как проверить после первого прод-деплоя логин, чат и сборы
