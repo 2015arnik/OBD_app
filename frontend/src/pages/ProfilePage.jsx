@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
+import PasswordField from "../components/PasswordField";
 import { useAuth } from "../context/AuthContext";
 import { api, extractApiError } from "../lib/api";
 
@@ -140,52 +141,43 @@ export default function ProfilePage() {
             <h3>Сменить пароль</h3>
           </div>
 
-          <label>
-            Текущий пароль
-            <input
-              type="password"
-              required
-              value={passwordForm.currentPassword}
-              onChange={(event) =>
-                setPasswordForm((current) => ({
-                  ...current,
-                  currentPassword: event.target.value
-                }))
-              }
-            />
-          </label>
+          <PasswordField
+            label="Текущий пароль"
+            required
+            value={passwordForm.currentPassword}
+            onChange={(event) =>
+              setPasswordForm((current) => ({
+                ...current,
+                currentPassword: event.target.value
+              }))
+            }
+          />
 
-          <label>
-            Новый пароль
-            <input
-              type="password"
-              required
-              minLength={6}
-              value={passwordForm.newPassword}
-              onChange={(event) =>
-                setPasswordForm((current) => ({
-                  ...current,
-                  newPassword: event.target.value
-                }))
-              }
-            />
-          </label>
+          <PasswordField
+            label="Новый пароль"
+            required
+            minLength={6}
+            value={passwordForm.newPassword}
+            onChange={(event) =>
+              setPasswordForm((current) => ({
+                ...current,
+                newPassword: event.target.value
+              }))
+            }
+          />
 
-          <label>
-            Повторите новый пароль
-            <input
-              type="password"
-              required
-              minLength={6}
-              value={passwordForm.confirmPassword}
-              onChange={(event) =>
-                setPasswordForm((current) => ({
-                  ...current,
-                  confirmPassword: event.target.value
-                }))
-              }
-            />
-          </label>
+          <PasswordField
+            label="Повторите новый пароль"
+            required
+            minLength={6}
+            value={passwordForm.confirmPassword}
+            onChange={(event) =>
+              setPasswordForm((current) => ({
+                ...current,
+                confirmPassword: event.target.value
+              }))
+            }
+          />
 
           {passwordFeedback ? <div className="feedback feedback-info">{passwordFeedback}</div> : null}
 

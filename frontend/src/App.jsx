@@ -42,7 +42,7 @@ function PublicOnlyRoute() {
     return <SplashScreen />;
   }
 
-  return token ? <Navigate to="/people" replace /> : <AuthPage />;
+  return token ? <Navigate to="/wishlist" replace /> : <AuthPage />;
 }
 
 function ProtectedLayout() {
@@ -102,7 +102,7 @@ export default function App() {
     <Routes>
       <Route path="/auth" element={<PublicOnlyRoute />} />
       <Route element={<ProtectedLayout />}>
-        <Route index element={<Navigate to="/people" replace />} />
+        <Route index element={<Navigate to="/wishlist" replace />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/people" element={<PeoplePage />} />
         <Route path="/friends/:id" element={<FriendPage />} />

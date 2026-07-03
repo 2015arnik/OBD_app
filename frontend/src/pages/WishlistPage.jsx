@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import EmptyState from "../components/EmptyState";
 import PageHeader from "../components/PageHeader";
 import StatusBadge from "../components/StatusBadge";
 import { useAuth } from "../context/AuthContext";
@@ -168,25 +167,14 @@ export default function WishlistPage() {
 
   return (
     <div className="page-stack">
-      <PageHeader
-        title="Мой вишлист"
-        description="Здесь живут только ваши подарки: добавление, редактирование и удаление позиций, которые увидят друзья."
-        actions={
-          <div className="cluster">
-            <Link className="button button-ghost" to="/profile">
-              Редактировать профиль
-            </Link>
-          </div>
-        }
-      />
+      <PageHeader title="Мой вишлист" />
 
       {feedback ? <div className="feedback feedback-info">{feedback}</div> : null}
 
-      <section className="two-column-layout">
+      <section>
         <form className="panel form-stack" onSubmit={addGift}>
           <div className="section-title">
             <h3>Добавить подарок</h3>
-            <span className="microcopy">POST /gifts</span>
           </div>
 
           <label>
@@ -240,15 +228,6 @@ export default function WishlistPage() {
             Добавить в список
           </button>
         </form>
-
-        <article className="panel spotlight-card">
-          <p className="eyebrow">Как это работает</p>
-          <h3>Ваши друзья увидят этот список в карточке профиля.</h3>
-          <p>
-            Личные данные теперь редактируются отдельно в профиле, а здесь можно спокойно
-            собирать и поддерживать только список желаемых подарков.
-          </p>
-        </article>
       </section>
 
       <section className="panel">
@@ -261,13 +240,6 @@ export default function WishlistPage() {
         </div>
 
         {loading ? <p className="microcopy">Загружаем ваш вишлист...</p> : null}
-
-        {!loading && gifts.length === 0 ? (
-          <EmptyState
-            title="Подарков пока нет"
-            description="Добавьте хотя бы один вариант, чтобы друзьям было из чего выбирать."
-          />
-        ) : null}
 
         <div className="gift-list">
           {gifts.map((gift) => (
@@ -295,6 +267,12 @@ export default function WishlistPage() {
           ))}
         </div>
       </section>
+
+      <div className="cluster">
+        <Link className="button button-ghost" to="/profile">
+          Редактировать профиль
+        </Link>
+      </div>
     </div>
   );
 }

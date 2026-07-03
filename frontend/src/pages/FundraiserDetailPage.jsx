@@ -34,7 +34,6 @@ export default function FundraiserDetailPage() {
   const { user } = useAuth();
   const [fundraiser, setFundraiser] = useState(null);
   const [users, setUsers] = useState([]);
-  const [subscriptions, setSubscriptions] = useState([]);
   const [contributions, setContributions] = useState([]);
   const [lastMockPayment, setLastMockPayment] = useState(null);
   const [amount, setAmount] = useState("");
@@ -44,17 +43,15 @@ export default function FundraiserDetailPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [fundraiserResponse, contributionsResponse, usersResponse, subscriptionsResponse] = await Promise.all([
+        const [fundraiserResponse, contributionsResponse, usersResponse] = await Promise.all([
           api.get(`/fundraisers/${id}`),
           api.get(`/fundraisers/${id}/contributions`),
-          api.get("/users"),
-          api.get("/subscriptions")
+          api.get("/users")
         ]);
         setFundraiser(fundraiserResponse.data);
         setContributions(contributionsResponse.data);
         setLastMockPayment(getLatestContribution(contributionsResponse.data));
         setUsers(usersResponse.data);
-        setSubscriptions(subscriptionsResponse.data);
       } catch (requestError) {
         setFeedback(extractApiError(requestError));
       } finally {
@@ -68,16 +65,6 @@ export default function FundraiserDetailPage() {
   const usersById = useMemo(
     () => Object.fromEntries(users.map((item) => [item.id, item])),
     [users]
-  );
-
-  const friendIds = useMemo(
-    () =>
-      new Set(
-        subscriptions
-          .filter((item) => item.targetType === "USER")
-          .map((item) => Number(item.targetId))
-      ),
-    [subscriptions]
   );
 
   const contribute = async () => {
@@ -112,7 +99,6 @@ export default function FundraiserDetailPage() {
 
   const targetUser = fundraiser ? usersById[fundraiser.targetUserId] : null;
   const isOpen = fundraiser?.status === "OPEN";
-  const canViewFundraiser = fundraiser ? friendIds.has(Number(fundraiser.targetUserId)) : true;
   const lastPaymentAuthor = lastMockPayment
     ? usersById[lastMockPayment.contributorId]?.name || `Пользователь #${lastMockPayment.contributorId}`
     : null;
@@ -148,14 +134,7 @@ export default function FundraiserDetailPage() {
         />
       ) : null}
 
-      {!loading && fundraiser && !canViewFundraiser ? (
-        <EmptyState
-          title="Сбор недоступен"
-          description="Сейчас на фронте показываются только сборы пользователей из вашего списка друзей."
-        />
-      ) : null}
-
-      {fundraiser && canViewFundraiser ? (
+      {fundraiser ? (
         <>
           <section className="hero-card">
             <div>
@@ -203,7 +182,6 @@ export default function FundraiserDetailPage() {
                 <div className="section-title">
                   <div>
                     <h3>История взносов</h3>
-                    <p className="microcopy">GET /fundraisers/{id}/contributions</p>
                   </div>
                   <span className="day-pill">{contributions.length} взносов</span>
                 </div>
@@ -237,7 +215,6 @@ export default function FundraiserDetailPage() {
                 <div className="section-title">
                   <div>
                     <h3>Участвовать в сборе</h3>
-                    <p className="microcopy">POST /fundraisers/{id}/contribute</p>
                   </div>
                 </div>
                 {isOpen ? (

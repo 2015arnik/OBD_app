@@ -1,6 +1,6 @@
-export default function PageHeader({ actions, description, title }) {
+export default function PageHeader({ actions, className = "", description, title }) {
   return (
-    <div className="page-header">
+    <div className={className ? `page-header ${className}` : "page-header"}>
       <div>
         <h2>{title}</h2>
         {description ? <p className="page-header-copy">{description}</p> : null}

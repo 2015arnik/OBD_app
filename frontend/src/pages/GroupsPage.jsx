@@ -15,6 +15,7 @@ export default function GroupsPage() {
   const [groups, setGroups] = useState([]);
   const [myGroupIds, setMyGroupIds] = useState([]);
   const [membersByGroup, setMembersByGroup] = useState({});
+  const [memberCountsByGroup, setMemberCountsByGroup] = useState({});
   const [subscriptions, setSubscriptions] = useState([]);
   const [groupForm, setGroupForm] = useState(newGroupInitialState);
   const [loading, setLoading] = useState(true);
@@ -28,9 +29,17 @@ export default function GroupsPage() {
           api.get("/subscriptions"),
           api.get(`/users/${user.id}`)
         ]);
+        const memberLists = await Promise.all(
+          groupsResponse.data.map((group) => api.get(`/groups/${group.id}/members`))
+        );
         setGroups(groupsResponse.data);
         setSubscriptions(subscriptionsResponse.data);
         setMyGroupIds(myProfileResponse.data.groups.map((group) => group.id));
+        setMemberCountsByGroup(
+          Object.fromEntries(
+            groupsResponse.data.map((group, index) => [group.id, memberLists[index].data.length])
+          )
+        );
       } catch (requestError) {
         setFeedback(extractApiError(requestError));
       } finally {
@@ -49,6 +58,7 @@ export default function GroupsPage() {
     try {
       const response = await api.get(`/groups/${groupId}/members`);
       setMembersByGroup((current) => ({ ...current, [groupId]: response.data }));
+      setMemberCountsByGroup((current) => ({ ...current, [groupId]: response.data.length }));
     } catch (requestError) {
       setFeedback(extractApiError(requestError));
     }
@@ -74,6 +84,7 @@ export default function GroupsPage() {
       const response = await api.post("/groups", groupForm);
       setGroups((current) => [response.data, ...current]);
       setMyGroupIds((current) => [...new Set([...current, response.data.id])]);
+      setMemberCountsByGroup((current) => ({ ...current, [response.data.id]: 1 }));
       setGroupForm(newGroupInitialState);
       setFeedback("Группа создана. Вы автоматически стали участником.");
     } catch (requestError) {
@@ -87,6 +98,7 @@ export default function GroupsPage() {
       setMyGroupIds((current) => [...new Set([...current, groupId])]);
       const response = await api.get(`/groups/${groupId}/members`);
       setMembersByGroup((current) => ({ ...current, [groupId]: response.data }));
+      setMemberCountsByGroup((current) => ({ ...current, [groupId]: response.data.length }));
       setFeedback("Вы в группе. Состав участников обновлён.");
     } catch (requestError) {
       setFeedback(extractApiError(requestError));
@@ -107,6 +119,10 @@ export default function GroupsPage() {
           [groupId]: current[groupId].filter((member) => member.id !== user.id)
         };
       });
+      setMemberCountsByGroup((current) => ({
+        ...current,
+        [groupId]: Math.max((current[groupId] ?? 1) - 1, 0)
+      }));
       setFeedback("Вы вышли из группы.");
     } catch (requestError) {
       setFeedback(extractApiError(requestError));
@@ -138,18 +154,14 @@ export default function GroupsPage() {
 
   return (
     <div className="page-stack">
-      <PageHeader
-        title="Группы"
-        description="Общий каталог групп, вступление в сообщества и подписки на дни рождения участников."
-      />
+      <PageHeader title="Группы" />
 
       {feedback ? <div className="feedback feedback-info">{feedback}</div> : null}
 
-      <section className="two-column-layout">
+      <section>
         <form className="panel form-stack" onSubmit={createGroup}>
           <div className="section-title">
             <h3>Создать новую группу</h3>
-            <span className="microcopy">POST /groups</span>
           </div>
 
           <label>
@@ -181,16 +193,6 @@ export default function GroupsPage() {
             Создать группу
           </button>
         </form>
-
-        <div className="panel spotlight-card">
-          <p className="eyebrow">Как использовать</p>
-          <h3>Групповые подписки экономят время.</h3>
-          <p>
-            Если вы подписываетесь на группу, в уведомления начнут приходить напоминания
-            о ближайших днях рождения её участников. Это удобно для учебных, рабочих
-            и дружеских компаний.
-          </p>
-        </div>
       </section>
 
       <section className="cards-grid">
@@ -217,9 +219,7 @@ export default function GroupsPage() {
                 <div>
                   <h3>{group.name}</h3>
                 </div>
-                <span className="day-pill">
-                  {members ? `${members.length} участников` : "Состав по запросу"}
-                </span>
+                <span className="day-pill">{memberCountsByGroup[group.id] ?? 0} участников</span>
               </div>
 
               <p>{group.description || "Описание пока не добавлено."}</p>

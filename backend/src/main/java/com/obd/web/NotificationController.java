@@ -34,4 +34,15 @@ public class NotificationController {
         n.setRead(true);
         return notifications.save(n);
     }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id, @CurrentUser User me) {
+        Notification n = notifications.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Notification not found"));
+        if (!n.getUserId().equals(me.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not your notification");
+        }
+        notifications.delete(n);
+    }
 }

@@ -90,6 +90,32 @@ label {
   font-size: 0.94rem;
 }
 
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  padding-right: 7rem;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.45rem;
+  transform: translateY(-50%);
+  border: 0;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(124, 92, 255, 0.1);
+  color: var(--accent-strong);
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.password-toggle:hover {
+  background: rgba(124, 92, 255, 0.16);
+}
+
 .button {
   border: 1px solid transparent;
   border-radius: 999px;
@@ -176,8 +202,14 @@ label {
 }
 
 .brand-block {
+  position: relative;
   display: grid;
   gap: 1rem;
+}
+
+.brand-copy {
+  display: grid;
+  gap: 0.2rem;
 }
 
 .brand-block h1 {
@@ -283,6 +315,20 @@ label {
   display: none;
 }
 
+.mobile-notification-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.mobile-notification-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .avatar {
   display: inline-flex;
   align-items: center;
@@ -296,6 +342,8 @@ label {
 }
 
 .content {
+  position: relative;
+  z-index: 1;
   padding: 2rem;
 }
 
@@ -351,6 +399,21 @@ label {
   gap: 0.75rem;
 }
 
+.button-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.45rem;
+}
+
+.button-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .page-actions-stack {
   display: flex;
   flex-wrap: wrap;
@@ -361,6 +424,21 @@ label {
 
 .search-box {
   width: min(100%, 280px);
+}
+
+.people-page-header {
+  align-items: center;
+}
+
+.people-page-header .page-header-actions {
+  flex: 1;
+  min-width: 0;
+}
+
+.people-page-header .page-actions-stack {
+  width: 100%;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .panel,
@@ -809,14 +887,14 @@ label {
   }
 
   .brand-block {
-    display: flex;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     gap: 1rem;
   }
 
-  .brand-block > div {
-    display: grid;
-    gap: 0.2rem;
+  .brand-copy {
+    min-width: 0;
   }
 
   .brand-block h1 {
@@ -825,6 +903,7 @@ label {
 
   .sidebar {
     position: relative;
+    z-index: 20;
     height: auto;
     min-height: auto;
     overflow: visible;
@@ -857,18 +936,19 @@ label {
   }
 
   .mobile-notification-anchor {
-    position: fixed;
-    top: 1rem;
-    right: 1rem;
-    z-index: 31;
+    position: relative;
     display: block;
+    justify-self: end;
+    z-index: 25;
   }
 
   .mobile-notification-button {
     display: inline-flex;
     align-items: center;
-    gap: 0.55rem;
-    padding: 0.65rem 0.9rem;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    padding: 0;
     border: 1px solid rgba(124, 92, 255, 0.12);
     border-radius: 999px;
     background: rgba(255, 251, 255, 0.92);
@@ -896,10 +976,13 @@ label {
   }
 
   .mobile-notification-popup {
+    position: absolute;
+    top: calc(100% + 0.7rem);
+    right: 0;
+    z-index: 30;
     display: grid;
     gap: 0.75rem;
     width: min(360px, calc(100vw - 2rem));
-    margin-top: 0.7rem;
     padding: 1rem;
     border-radius: 24px;
     background: rgba(255, 251, 255, 0.96);
@@ -998,6 +1081,15 @@ label {
     padding: 1rem;
   }
 
+  .brand-block {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .brand-copy {
+    gap: 0.15rem;
+  }
+
   .brand-mark {
     width: 56px;
     height: 56px;
@@ -1014,17 +1106,20 @@ label {
   }
 
   .mobile-notification-anchor {
-    top: 0.75rem;
-    right: 0.75rem;
+    grid-column: 3;
+    justify-self: end;
+    margin-top: 0;
   }
 
   .mobile-notification-button {
-    padding: 0.55rem 0.8rem;
-    font-size: 0.82rem;
+    width: 2.8rem;
+    height: 2.8rem;
   }
 
   .mobile-notification-popup {
-    width: min(340px, calc(100vw - 1.5rem));
+    right: 0;
+    left: auto;
+    width: min(340px, calc(100vw - 2rem));
   }
 
   .mobile-nav-item {
@@ -1041,6 +1136,41 @@ label {
   .mock-bank-row {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .people-page-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .people-page-header .page-header-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .people-page-header .page-actions-stack {
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+  }
+
+  .people-page-header .search-box {
+    display: block;
+    width: min(100%, 190px);
+  }
+
+  .people-page-header .search-box span {
+    display: none;
+  }
+
+  .people-page-header .search-box input {
+    padding: 0.75rem 0.9rem;
+  }
+
+  .people-page-header .button {
+    padding: 0.75rem 0.95rem;
+    white-space: nowrap;
   }
 
   .page-header h2 {

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PasswordField from "../components/PasswordField";
 import { useAuth } from "../context/AuthContext";
 
 const loginInitialState = {
@@ -116,35 +117,29 @@ export default function AuthPage() {
             />
           </label>
 
-          <label>
-            Пароль
-            <input
-              required
-              type="password"
-              value={mode === "login" ? loginForm.password : registerForm.password}
-              onChange={(event) =>
-                mode === "login"
-                  ? setLoginForm((current) => ({ ...current, password: event.target.value }))
-                  : setRegisterForm((current) => ({ ...current, password: event.target.value }))
-              }
-            />
-          </label>
+          <PasswordField
+            label="Пароль"
+            required
+            value={mode === "login" ? loginForm.password : registerForm.password}
+            onChange={(event) =>
+              mode === "login"
+                ? setLoginForm((current) => ({ ...current, password: event.target.value }))
+                : setRegisterForm((current) => ({ ...current, password: event.target.value }))
+            }
+          />
 
           {mode === "register" ? (
-            <label>
-              Подтвердите пароль
-              <input
-                required
-                type="password"
-                value={registerForm.confirmPassword}
-                onChange={(event) =>
-                  setRegisterForm((current) => ({
-                    ...current,
-                    confirmPassword: event.target.value
-                  }))
-                }
-              />
-            </label>
+            <PasswordField
+              label="Подтвердите пароль"
+              required
+              value={registerForm.confirmPassword}
+              onChange={(event) =>
+                setRegisterForm((current) => ({
+                  ...current,
+                  confirmPassword: event.target.value
+                }))
+              }
+            />
           ) : null}
 
           {mode === "register" ? (

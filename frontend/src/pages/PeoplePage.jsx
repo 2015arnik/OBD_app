@@ -1,6 +1,5 @@
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import EmptyState from "../components/EmptyState";
 import PageHeader from "../components/PageHeader";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE_URL, api, extractApiError } from "../lib/api";
@@ -131,8 +130,8 @@ export default function PeoplePage() {
   return (
     <div className="page-stack">
       <PageHeader
+        className="people-page-header"
         title="Друзья"
-        description="Ваш список друзей хранится через пользовательские подписки на бэкенде: сверху ваши люди, ниже поиск и добавление новых."
         actions={
           <div className="page-actions-stack">
             <label className="search-box">
@@ -149,6 +148,14 @@ export default function PeoplePage() {
               target="_blank"
               rel="noreferrer"
             >
+              <span className="button-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path
+                    d="M7 2.75a.75.75 0 0 1 .75.75V5h8.5V3.5a.75.75 0 0 1 1.5 0V5H19a2.25 2.25 0 0 1 2.25 2.25v10.5A2.25 2.25 0 0 1 19 20H5a2.25 2.25 0 0 1-2.25-2.25V7.25A2.25 2.25 0 0 1 5 5h1.25V3.5A.75.75 0 0 1 7 2.75ZM4.25 9.5v8.25c0 .41.34.75.75.75h14c.41 0 .75-.34.75-.75V9.5h-15.5Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </span>
               Экспорт всех ДР
             </a>
           </div>
@@ -161,26 +168,11 @@ export default function PeoplePage() {
 
       <section className="panel section-stack">
         <div className="section-title">
-          <div>
-            <h3>Мои друзья</h3>
-            <p className="microcopy">
-              Это пользователи, на которых вы подписались. Для текущего этапа проекта это и есть
-              рабочая модель друзей.
-            </p>
-          </div>
+          <h3>Мои друзья</h3>
           <span className="day-pill">{filteredFriends.length}</span>
         </div>
 
-        {filteredFriends.length === 0 ? (
-          <EmptyState
-            title={friends.length === 0 ? "Друзей пока нет" : "По запросу ничего не найдено"}
-            description={
-              friends.length === 0
-                ? "Добавьте первого человека из общего списка ниже, и он сразу появится в этом блоке."
-                : "Попробуйте изменить строку поиска, чтобы снова увидеть друзей."
-            }
-          />
-        ) : (
+        {filteredFriends.length > 0 ? (
           <div className="cards-grid">
             {filteredFriends.map((person) => (
               <article key={person.id} className="person-card person-card-soft">
@@ -211,46 +203,26 @@ export default function PeoplePage() {
                   </Link>
                   <button
                     type="button"
-                    className="button button-ghost"
+                    className="button button-danger"
                     disabled={busyUserId === person.id}
                     onClick={() => removeFriend(person)}
                   >
-                    Убрать из друзей
+                    Удалить из друзей
                   </button>
                 </div>
               </article>
             ))}
           </div>
-        )}
+        ) : null}
       </section>
 
       <section className="panel section-stack">
-        <div className="section-title">
-          <div>
-            <h3>Найти друзей среди всех пользователей</h3>
-            <p className="microcopy">
-              Здесь остаются только те пользователи, которых ещё нет в вашем списке друзей.
-            </p>
-          </div>
-          <span className="day-pill">{searchablePeople.length} кандидатов</span>
-        </div>
-
-        {searchablePeople.length === 0 ? (
-          <EmptyState
-            title="Свободных кандидатов не осталось"
-            description={
-              peopleWithoutMe.length === friends.length
-                ? "Сейчас у вас в друзьях уже все пользователи системы."
-                : "Поиск не нашёл новых людей. Попробуйте изменить запрос."
-            }
-          />
-        ) : (
+        {searchablePeople.length > 0 ? (
           <div className="cards-grid">
             {searchablePeople.map((person) => (
               <article key={person.id} className="person-card person-card-soft">
                 <div className="person-card-top">
                   <div>
-                    <p className="eyebrow">Пользователь системы</p>
                     <h3>{person.name}</h3>
                   </div>
                   <span className="day-pill">
@@ -263,29 +235,25 @@ export default function PeoplePage() {
                     <dt>Дата рождения</dt>
                     <dd>{formatBirthday(person.birthDate)}</dd>
                   </div>
-                  <div>
-                    <dt>Позиция в списке</dt>
-                    <dd>#{people.findIndex((item) => item.id === person.id) + 1}</dd>
-                  </div>
                 </dl>
 
                 <div className="card-actions">
-                  <Link className="button button-primary" to={`/friends/${person.id}`}>
-                    Открыть карточку
-                  </Link>
                   <button
                     type="button"
-                    className="button button-ghost"
+                    className="button button-primary"
                     disabled={busyUserId === person.id}
                     onClick={() => addFriend(person)}
                   >
                     Добавить в друзья
                   </button>
+                  <Link className="button button-ghost" to={`/friends/${person.id}`}>
+                    Открыть карточку
+                  </Link>
                 </div>
               </article>
             ))}
           </div>
-        )}
+        ) : null}
       </section>
     </div>
   );

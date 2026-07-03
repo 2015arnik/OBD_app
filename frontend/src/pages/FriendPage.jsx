@@ -1,10 +1,10 @@
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import EmptyState from "../components/EmptyState";
 import PageHeader from "../components/PageHeader";
 import StatusBadge from "../components/StatusBadge";
 import { useAuth } from "../context/AuthContext";
-import { api, extractApiError, getWebSocketUrl } from "../lib/api";
+import { AUTH_INVALID_EVENT, api, extractApiError, getWebSocketUrl } from "../lib/api";
 import {
   formatBirthday,
   formatDateTime,
@@ -34,7 +34,7 @@ function updateGiftStatusLocally(card, updatedGift) {
 
 export default function FriendPage() {
   const { id } = useParams();
-  const { logout, token, user } = useAuth();
+  const { token, user } = useAuth();
   const [card, setCard] = useState(null);
   const [subscriptions, setSubscriptions] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -100,30 +100,6 @@ export default function FriendPage() {
     loadHistory();
   }, [id, isOwnCard]);
 
-  const handleIncomingMessage = useEffectEvent((event) => {
-    const nextMessage = JSON.parse(event.data);
-    setMessages((current) => {
-      if (current.some((item) => item.id === nextMessage.id)) {
-        return current;
-      }
-
-      return [...current, nextMessage];
-    });
-  });
-
-  const scheduleReconnect = useEffectEvent((message) => {
-    if (reconnectTimeoutRef.current) {
-      window.clearTimeout(reconnectTimeoutRef.current);
-    }
-
-    setChatState("reconnecting");
-    setChatError(message);
-    reconnectTimeoutRef.current = window.setTimeout(() => {
-      reconnectTimeoutRef.current = null;
-      setChatConnectionNonce((current) => current + 1);
-    }, 2000);
-  });
-
   useEffect(() => {
     if (isOwnCard || !token) {
       return undefined;
@@ -138,6 +114,19 @@ export default function FriendPage() {
       setChatError("");
     }
 
+    const scheduleReconnect = (message) => {
+      if (reconnectTimeoutRef.current) {
+        window.clearTimeout(reconnectTimeoutRef.current);
+      }
+
+      setChatState("reconnecting");
+      setChatError(message);
+      reconnectTimeoutRef.current = window.setTimeout(() => {
+        reconnectTimeoutRef.current = null;
+        setChatConnectionNonce((current) => current + 1);
+      }, 2000);
+    };
+
     socket.onopen = () => {
       if (ignoreSocketEvents || socketRef.current !== socket) {
         return;
@@ -146,7 +135,16 @@ export default function FriendPage() {
       setChatState("open");
       setChatError("");
     };
-    socket.onmessage = handleIncomingMessage;
+    socket.onmessage = (event) => {
+      const nextMessage = JSON.parse(event.data);
+      setMessages((current) => {
+        if (current.some((item) => item.id === nextMessage.id)) {
+          return current;
+        }
+
+        return [...current, nextMessage];
+      });
+    };
     socket.onerror = () => {
       if (ignoreSocketEvents || socketRef.current !== socket || socket.readyState === WebSocket.OPEN) {
         return;
@@ -163,7 +161,7 @@ export default function FriendPage() {
       if (event.reason === "User not found" || event.reason === "Invalid token") {
         setChatState("closed");
         setChatError("Сессия устарела после перезапуска сервера. Войдите заново.");
-        logout();
+        window.dispatchEvent(new CustomEvent(AUTH_INVALID_EVENT));
       } else if (event.reason) {
         setChatState("closed");
         setChatError(event.reason);
@@ -185,7 +183,7 @@ export default function FriendPage() {
         socketRef.current = null;
       }
     };
-  }, [chatConnectionNonce, handleIncomingMessage, id, isOwnCard, logout, scheduleReconnect, token]);
+  }, [chatConnectionNonce, id, isOwnCard, token]);
 
   const retryChatConnection = () => {
     if (reconnectTimeoutRef.current) {
@@ -263,8 +261,12 @@ export default function FriendPage() {
                 Открыть мой вишлист
               </Link>
             ) : (
-              <button type="button" className="button button-primary" onClick={toggleUserSubscription}>
-                {userSubscription ? "Убрать из друзей" : "Добавить в друзья"}
+              <button
+                type="button"
+                className={userSubscription ? "button button-danger" : "button button-primary"}
+                onClick={toggleUserSubscription}
+              >
+                {userSubscription ? "Удалить из друзей" : "Добавить в друзья"}
               </button>
             )}
           </div>
@@ -368,26 +370,44 @@ export default function FriendPage() {
                         </div>
 
                         {!isOwnCard ? (
-                          <div className="status-actions">
-                            {["WANTED", "RESERVED", "BOUGHT"].map((status) => (
-                              <button
-                                key={status}
-                                type="button"
-                                className={
-                                  gift.status === status
-                                    ? "button button-primary"
-                                    : "button button-ghost"
-                                }
-                                onClick={() => changeGiftStatus(gift.id, status)}
+                          <>
+                            <div className="card-actions">
+                              <Link
+                                className="button button-ghost"
+                                to="/fundraisers"
+                                state={{
+                                  prefillFundraiser: {
+                                    targetUserId: String(card.id),
+                                    giftId: String(gift.id),
+                                    giftTitle: gift.title || "",
+                                    giftPrice: gift.price ?? ""
+                                  }
+                                }}
                               >
-                                {status === "WANTED"
-                                  ? "Свободен"
-                                  : status === "RESERVED"
-                                    ? "Резерв"
-                                    : "Куплен"}
-                              </button>
-                            ))}
-                          </div>
+                                Организовать сбор
+                              </Link>
+                            </div>
+                            <div className="status-actions">
+                              {["WANTED", "RESERVED", "BOUGHT"].map((status) => (
+                                <button
+                                  key={status}
+                                  type="button"
+                                  className={
+                                    gift.status === status
+                                      ? "button button-primary"
+                                      : "button button-ghost"
+                                  }
+                                  onClick={() => changeGiftStatus(gift.id, status)}
+                                >
+                                  {status === "WANTED"
+                                    ? "Свободен"
+                                    : status === "RESERVED"
+                                      ? "Резерв"
+                                      : "Куплен"}
+                                </button>
+                              ))}
+                            </div>
+                          </>
                         ) : null}
                       </article>
                     ))}
