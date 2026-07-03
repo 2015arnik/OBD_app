@@ -5,94 +5,55 @@
 подарка (без именинника), автосбор средств через мок-банк и календарь.
 
 ## Стек
-- Бэкенд: Java 17 + Spring Boot 3 (Spring Web, Spring Data JPA + H2, Spring WebSocket, `@Scheduled`, JWT + BCrypt, springdoc/Swagger). Без Lombok, геттеры/сеттеры явные.
-- Веб: React + Vite + PWA (скоро)
-- Мобильное (iOS/Android): React Native + Expo (скоро)
+- Бэкенд: Java 17 + Spring Boot 3 (Spring Web, Spring Data JPA + H2, Spring WebSocket, `@Scheduled`, JWT + BCrypt, springdoc/Swagger). Без Lombok.
+- Веб: React 19 + Vite + PWA (папка `frontend/`).
+- Мобильное (iOS/Android): React Native + Expo (позже).
 
-## Как запустить бэкенд
+## Запуск бэкенда
 Требуется JDK 17+.
 ```
 cd backend
 mvn spring-boot:run
 ```
-- API: `http://localhost:8080`
-- Swagger: `http://localhost:8080/swagger-ui.html`
-- Консоль БД H2: `http://localhost:8080/h2-console` (JDBC URL `jdbc:h2:mem:obd`, user `sa`)
+- API: `http://localhost:8080`, Swagger: `http://localhost:8080/swagger-ui.html`
+- Консоль БД: `http://localhost:8080/h2-console` (JDBC URL `jdbc:h2:mem:obd`, user `sa`)
 
-## Как запустить веб-фронтенд
-Требуется Node.js 20+.
+## Запуск фронтенда
 ```
 cd frontend
 npm install
-cp .env.example .env
 npm run dev
 ```
-- Веб-приложение: `http://localhost:5173`
-- По умолчанию фронтенд ходит в API `http://localhost:8080`
-- Для production-сборки: `npm run build`
+Vite поднимется на `http://localhost:5173` и будет ходить в API по адресу из `frontend/.env`
+(`VITE_API_BASE_URL=http://localhost:8080`).
 
-## Проверка в Swagger
-1. `POST /auth/register` → скопируйте `token`.
-2. Кнопка Authorize сверху → вставьте токен.
-3. Дальше доступны защищённые эндпоинты.
+## Демо-доступ (seed-данные)
+При старте бэкенд наполняет базу тестовыми данными. Пароль у всех — `password`.
+- `anna@obd.app` — есть подписки, уведомления, участие в группах (удобно показывать демо)
+- `boris@obd.app` — у него скоро ДР, есть вишлист и открытый сбор
+- `admin@obd.app` — администратор
 
 ## API
 ```
-АВТОРИЗАЦИЯ
-  POST   /auth/register     {name,email,password,birthDate} -> {token, user}
-  POST   /auth/login        {email,password}                -> {token, user}
-  GET    /auth/me
-  GET    /health
-
-ПОЛЬЗОВАТЕЛИ
-  GET    /users                 все + сортировка по ближайшему ДР
-  GET    /users/{id}            карточка: профиль + группы + вишлист
-  PATCH  /users/{id}            редактировать свой профиль
-
-ГРУППЫ
-  GET    /groups
-  POST   /groups                создать (создатель сразу вступает)
-  POST   /groups/{id}/join
-  GET    /groups/{id}/members
-
-ПОДАРКИ
-  GET    /users/{id}/gifts
-  POST   /gifts                 опубликовать свой подарок
-  PATCH  /gifts/{id}            статус (резерв/куплено); текст — только владелец
-  DELETE /gifts/{id}            только владелец
-
-ПОДПИСКИ / УВЕДОМЛЕНИЯ
-  GET    /subscriptions
-  POST   /subscriptions         {targetType: USER|GROUP, targetId}
-  DELETE /subscriptions/{id}
-  GET    /notifications
-  POST   /notifications/{id}/read
-
-ЧАТ (реалтайм, WebSocket)
-  WS     /ws/chat/{userId}?token=<jwt>   комната обсуждения подарка именинника {userId}
-  GET    /users/{id}/chat               история сообщений
+АВТОРИЗАЦИЯ         POST /auth/register, POST /auth/login, GET /auth/me, GET /health
+ПОЛЬЗОВАТЕЛИ        GET /users, GET /users/{id}, PATCH /users/{id}
+ГРУППЫ              GET /groups, POST /groups, POST /groups/{id}/join, GET /groups/{id}/members
+ПОДАРКИ             GET /users/{id}/gifts, POST /gifts, PATCH /gifts/{id}, DELETE /gifts/{id}
+ПОДПИСКИ/УВЕДОМЛ.   GET/POST /subscriptions, DELETE /subscriptions/{id}, GET /notifications, POST /notifications/{id}/read
+ЧАТ (WebSocket)     WS /ws/chat/{userId}?token=<jwt>, GET /users/{id}/chat
+СБОР СРЕДСТВ        GET /fundraisers, GET /fundraisers/{id}, POST /fundraisers, POST /fundraisers/{id}/contribute, GET /fundraisers/{id}/contributions
+МОК-БАНК            POST /mock-bank/charge
 ```
-Именинник не может ни подключиться к своему чату по WebSocket, ни получить его историю.
-
-## Как проверить чат (без фронта)
-Залогиньтесь двумя разными пользователями (id которых НЕ равен имениннику).
-В консоли браузера (две вкладки):
-```
-const token = "<токен из /auth/login>";
-const ws = new WebSocket(`ws://localhost:8080/ws/chat/2?token=${token}`);
-ws.onmessage = e => console.log(JSON.parse(e.data));
-ws.onopen = () => ws.send(JSON.stringify({ text: "Привет!" }));
-```
-Сообщение из одной вкладки мгновенно появляется в другой. `2` — id именинника, чей подарок обсуждают.
 
 ## Статус
-- [x] Каркас Spring Boot + модель данных
-- [x] Авторизация (JWT + BCrypt)
+- [x] Модель данных, авторизация (JWT + BCrypt)
 - [x] API ядра (users, groups, gifts, subscriptions, notifications)
 - [x] Реалтайм-чат (WebSocket) + приватность именинника
-- [x] Веб-фронтенд (React + Vite + PWA) для ядра: auth, люди, карточка друга, мой вишлист, группы, уведомления
-- [ ] Усложнения: сбор средств (мок-банк), планировщик, календарь, админка
-- [ ] Seed-данные
+- [x] Сбор средств + мок-банк
+- [x] Seed-данные (демо-наполнение)
+- [ ] Планировщик `@Scheduled` (авто-напоминания и авто-сбор)
+- [ ] Календарь (.ics), админ-панель
+- [x] Веб-фронтенд (React + Vite + PWA)
 - [ ] Мобильное приложение
 
-Стратегия и план — `docs/СТРАТЕГИЯ.md`. Как продолжить с другого аккаунта — `HANDOFF.md`.
+Стратегия — `docs/СТРАТЕГИЯ.md`. Продолжение с другого аккаунта — `HANDOFF.md`.
