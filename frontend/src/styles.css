@@ -378,6 +378,76 @@ label {
   margin-top: 1rem;
 }
 
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.admin-tab,
+.admin-room-button {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--text);
+}
+
+.admin-tab {
+  padding: 0.85rem 1.15rem;
+  border-radius: 999px;
+}
+
+.admin-tab-active {
+  background: linear-gradient(135deg, rgba(255, 122, 168, 0.16), rgba(255, 179, 71, 0.16), rgba(124, 92, 255, 0.14));
+  color: var(--accent-strong);
+  border-color: rgba(124, 92, 255, 0.18);
+}
+
+.admin-collection {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-focus-card {
+  border-color: rgba(124, 92, 255, 0.22);
+  box-shadow: 0 0 0 4px rgba(124, 92, 255, 0.08), var(--shadow);
+}
+
+.admin-inline-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.admin-chat-layout {
+  grid-template-columns: minmax(300px, 0.82fr) minmax(0, 1.18fr);
+}
+
+.admin-room-button {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.9rem;
+  padding: 1rem;
+  border-radius: 24px;
+  text-align: left;
+}
+
+.admin-room-button p {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+}
+
+.admin-room-button-active {
+  background: linear-gradient(135deg, rgba(255, 244, 248, 0.92), rgba(243, 237, 255, 0.92));
+  border-color: rgba(124, 92, 255, 0.16);
+}
+
+.admin-full-width {
+  grid-column: 1 / -1;
+}
+
 .page-stack {
   display: grid;
   gap: 1.5rem;
@@ -447,6 +517,10 @@ label {
   gap: 0.75rem;
   align-items: end;
   justify-content: flex-end;
+}
+
+.admin-page-actions {
+  width: min(100%, 420px);
 }
 
 .search-box {
@@ -1101,6 +1175,10 @@ label {
 
   .auth-layout,
   .two-column-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-chat-layout {
     grid-template-columns: 1fr;
   }
 }

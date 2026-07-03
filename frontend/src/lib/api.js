@@ -10,10 +10,11 @@ const fallbackProtocol =
 export const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL || `${fallbackProtocol}://${fallbackHost}:8080`
 ).replace(/\/$/, "");
+const API_TIMEOUT_MS = Number(import.meta.env.VITE_API_TIMEOUT_MS || 45000);
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 15000
+  timeout: API_TIMEOUT_MS
 });
 
 api.interceptors.request.use((config) => {
@@ -38,6 +39,10 @@ api.interceptors.response.use(
 );
 
 export function extractApiError(error) {
+  if (error?.code === "ECONNABORTED" || /timeout/i.test(error?.message || "")) {
+    return `API (${API_BASE_URL}) отвечает слишком долго. Если бэкенд запущен на Render, это может быть первый холодный старт. Подождите 20-40 секунд и попробуйте ещё раз.`;
+  }
+
   if (error?.code === "ERR_NETWORK") {
     return `Не удаётся связаться с API (${API_BASE_URL}). Проверьте, что бэкенд запущен и адрес указан верно.`;
   }

@@ -83,6 +83,11 @@ export default function ProfilePage() {
         description="Здесь редактируются ваши личные данные. Вишлист теперь отвечает только за подарки."
         actions={
           <div className="cluster">
+            {user.admin ? (
+              <Link className="button button-ghost" to="/admin">
+                Режим администратора
+              </Link>
+            ) : null}
             <Link className="button button-ghost" to={`/friends/${user.id}`}>
               Моя карточка
             </Link>
@@ -186,6 +191,22 @@ export default function ProfilePage() {
           </button>
         </form>
       </section>
+
+      {user.admin ? (
+        <section className="panel form-stack">
+          <div className="section-title">
+            <h3>Режим администратора</h3>
+          </div>
+          <p className="microcopy">
+            Отдельный рабочий контур для модерации пользователей, групп, сборов, вишлистов и чатов.
+          </p>
+          <div className="card-actions">
+            <Link className="button button-primary" to="/admin">
+              Открыть админку
+            </Link>
+          </div>
+        </section>
+      ) : null}
 
       <section className="panel form-stack">
         <div className="section-title">

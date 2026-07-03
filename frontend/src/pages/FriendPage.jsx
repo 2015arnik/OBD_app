@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import EmptyState from "../components/EmptyState";
 import PageHeader from "../components/PageHeader";
 import StatusBadge from "../components/StatusBadge";
@@ -34,6 +34,7 @@ function updateGiftStatusLocally(card, updatedGift) {
 
 export default function FriendPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { token, user } = useAuth();
   const [card, setCard] = useState(null);
   const [subscriptions, setSubscriptions] = useState([]);
@@ -246,6 +247,40 @@ export default function FriendPage() {
     }
   };
 
+  const deleteUserAsAdmin = async () => {
+    if (!window.confirm("Удалить этого пользователя как администратор?")) {
+      return;
+    }
+
+    try {
+      await api.delete(`/admin/users/${id}`);
+      navigate("/people");
+    } catch (requestError) {
+      setFeedback(extractApiError(requestError));
+    }
+  };
+
+  const deleteGiftAsAdmin = async (giftId) => {
+    if (!window.confirm("Удалить подарок как администратор?")) {
+      return;
+    }
+
+    try {
+      await api.delete(`/admin/gifts/${giftId}`);
+      setCard((current) =>
+        current
+          ? {
+              ...current,
+              gifts: current.gifts.filter((gift) => gift.id !== giftId)
+            }
+          : current
+      );
+      setFeedback("Подарок удалён администратором.");
+    } catch (requestError) {
+      setFeedback(extractApiError(requestError));
+    }
+  };
+
   return (
     <div className="page-stack">
       <PageHeader
@@ -261,13 +296,25 @@ export default function FriendPage() {
                 Открыть мой вишлист
               </Link>
             ) : (
-              <button
-                type="button"
-                className={userSubscription ? "button button-danger" : "button button-primary"}
-                onClick={toggleUserSubscription}
-              >
-                {userSubscription ? "Удалить из друзей" : "Добавить в друзья"}
-              </button>
+              <>
+                <button
+                  type="button"
+                  className={userSubscription ? "button button-danger" : "button button-primary"}
+                  onClick={toggleUserSubscription}
+                >
+                  {userSubscription ? "Удалить из друзей" : "Добавить в друзья"}
+                </button>
+                {user.admin ? (
+                  <>
+                    <Link className="button button-ghost" to={`/admin?tab=users&focus=${id}`}>
+                      В админке
+                    </Link>
+                    <button type="button" className="button button-danger" onClick={deleteUserAsAdmin}>
+                      Удалить пользователя
+                    </button>
+                  </>
+                ) : null}
+              </>
             )}
           </div>
         }
@@ -401,6 +448,34 @@ export default function FriendPage() {
                                 >
                                   Организовать сбор
                                 </Link>
+                                {user.admin ? (
+                                  <>
+                                    <Link className="button button-ghost" to={`/admin?tab=gifts&focus=${gift.id}`}>
+                                      В админке
+                                    </Link>
+                                    <button
+                                      type="button"
+                                      className="button button-danger"
+                                      onClick={() => deleteGiftAsAdmin(gift.id)}
+                                    >
+                                      Удалить подарок
+                                    </button>
+                                  </>
+                                ) : null}
+                              </div>
+                            ) : null}
+                            {gift.status !== "WANTED" && user.admin ? (
+                              <div className="card-actions">
+                                <Link className="button button-ghost" to={`/admin?tab=gifts&focus=${gift.id}`}>
+                                  В админке
+                                </Link>
+                                <button
+                                  type="button"
+                                  className="button button-danger"
+                                  onClick={() => deleteGiftAsAdmin(gift.id)}
+                                >
+                                  Удалить подарок
+                                </button>
                               </div>
                             ) : null}
                             <div className="status-actions">

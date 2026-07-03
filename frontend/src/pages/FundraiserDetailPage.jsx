@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import EmptyState from "../components/EmptyState";
 import PageHeader from "../components/PageHeader";
 import { useAuth } from "../context/AuthContext";
@@ -31,6 +31,7 @@ function getLatestContributionByUser(items, userId) {
 
 export default function FundraiserDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [fundraiser, setFundraiser] = useState(null);
   const [users, setUsers] = useState([]);
@@ -86,6 +87,19 @@ export default function FundraiserDetailPage() {
     }
   };
 
+  const deleteFundraiserAsAdmin = async () => {
+    if (!window.confirm("Удалить сбор как администратор?")) {
+      return;
+    }
+
+    try {
+      await api.delete(`/admin/fundraisers/${id}`);
+      navigate("/fundraisers");
+    } catch (requestError) {
+      setFeedback(extractApiError(requestError));
+    }
+  };
+
   const progress = useMemo(() => {
     if (!fundraiser?.goalAmount) {
       return 0;
@@ -118,6 +132,16 @@ export default function FundraiserDetailPage() {
               <Link className="button button-ghost" to={`/friends/${targetUser.id}`}>
                 К карточке друга
               </Link>
+            ) : null}
+            {user.admin ? (
+              <>
+                <Link className="button button-ghost" to={`/admin?tab=fundraisers&focus=${id}`}>
+                  В админке
+                </Link>
+                <button type="button" className="button button-danger" onClick={deleteFundraiserAsAdmin}>
+                  Удалить сбор
+                </button>
+              </>
             ) : null}
           </div>
         }

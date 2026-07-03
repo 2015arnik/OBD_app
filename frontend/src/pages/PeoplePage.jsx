@@ -191,10 +191,6 @@ export default function PeoplePage() {
                     <dt>Дата рождения</dt>
                     <dd>{formatBirthday(person.birthDate)}</dd>
                   </div>
-                  <div>
-                    <dt>Карточка</dt>
-                    <dd>Друг #{people.findIndex((item) => item.id === person.id) + 1}</dd>
-                  </div>
                 </dl>
 
                 <div className="card-actions">

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import EmptyState from "../components/EmptyState";
 import PageHeader from "../components/PageHeader";
 import { useAuth } from "../context/AuthContext";
@@ -152,6 +153,30 @@ export default function GroupsPage() {
     }
   };
 
+  const deleteGroupAsAdmin = async (groupId) => {
+    if (!window.confirm("Удалить группу как администратор?")) {
+      return;
+    }
+
+    try {
+      await api.delete(`/admin/groups/${groupId}`);
+      setGroups((current) => current.filter((group) => group.id !== groupId));
+      setMembersByGroup((current) => {
+        const next = { ...current };
+        delete next[groupId];
+        return next;
+      });
+      setMemberCountsByGroup((current) => {
+        const next = { ...current };
+        delete next[groupId];
+        return next;
+      });
+      setFeedback("Группа удалена администратором.");
+    } catch (requestError) {
+      setFeedback(extractApiError(requestError));
+    }
+  };
+
   return (
     <div className="page-stack">
       <PageHeader title="Группы" />
@@ -257,6 +282,20 @@ export default function GroupsPage() {
                 >
                   {members ? "Скрыть участников" : "Показать участников"}
                 </button>
+                {user.admin ? (
+                  <>
+                    <Link className="button button-ghost" to={`/admin?tab=groups&focus=${group.id}`}>
+                      В админке
+                    </Link>
+                    <button
+                      type="button"
+                      className="button button-danger"
+                      onClick={() => deleteGroupAsAdmin(group.id)}
+                    >
+                      Удалить группу
+                    </button>
+                  </>
+                ) : null}
               </div>
 
               {members ? (
