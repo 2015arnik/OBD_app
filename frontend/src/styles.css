@@ -813,6 +813,19 @@ label {
   background: linear-gradient(135deg, rgba(255, 240, 247, 0.96), rgba(243, 237, 255, 0.96));
 }
 
+.chat-message-admin-action {
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chat-message-admin-action:hover,
+.chat-message-admin-action:focus-visible {
+  border-color: rgba(225, 75, 91, 0.28);
+  box-shadow: 0 0 0 4px rgba(225, 75, 91, 0.08);
+  transform: translateY(-1px);
+  outline: none;
+}
+
 .chat-message p {
   margin: 0.4rem 0 0;
 }

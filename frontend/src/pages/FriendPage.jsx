@@ -238,6 +238,24 @@ export default function FriendPage() {
     setChatText("");
   };
 
+  const deleteChatMessageAsAdmin = async (message) => {
+    if (!user.admin) {
+      return;
+    }
+
+    if (!window.confirm("Удалить это сообщение как администратор?")) {
+      return;
+    }
+
+    try {
+      await api.delete(`/admin/messages/${message.id}`);
+      setMessages((current) => current.filter((item) => item.id !== message.id));
+      setFeedback("Сообщение удалено администратором.");
+    } catch (requestError) {
+      setFeedback(extractApiError(requestError));
+    }
+  };
+
   const openGoogleCalendar = async () => {
     try {
       const response = await api.get(`/users/${id}/calendar/google`);
@@ -530,6 +548,11 @@ export default function FriendPage() {
               ) : (
                 <>
                   {chatError ? <div className="feedback feedback-error">{chatError}</div> : null}
+                  {user.admin ? (
+                    <div className="feedback feedback-info">
+                      Режим администратора: нажмите на сообщение в чате, чтобы удалить его.
+                    </div>
+                  ) : null}
                   {chatState !== "open" ? (
                     <div className="card-actions">
                       <button type="button" className="button button-ghost" onClick={retryChatConnection}>
@@ -551,9 +574,20 @@ export default function FriendPage() {
                         <div
                           key={message.id}
                           className={
-                            message.authorId === user.id
-                              ? "chat-message chat-message-own"
-                              : "chat-message"
+                            `${message.authorId === user.id ? "chat-message chat-message-own" : "chat-message"}${user.admin ? " chat-message-admin-action" : ""}`
+                          }
+                          role={user.admin ? "button" : undefined}
+                          tabIndex={user.admin ? 0 : undefined}
+                          onClick={user.admin ? () => deleteChatMessageAsAdmin(message) : undefined}
+                          onKeyDown={
+                            user.admin
+                              ? (event) => {
+                                  if (event.key === "Enter" || event.key === " ") {
+                                    event.preventDefault();
+                                    deleteChatMessageAsAdmin(message);
+                                  }
+                                }
+                              : undefined
                           }
                         >
                           <div className="chat-message-top">
