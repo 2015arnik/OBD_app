@@ -8,6 +8,7 @@ import com.obd.repository.GroupRepository;
 import com.obd.repository.SubscriptionRepository;
 import com.obd.repository.UserRepository;
 import com.obd.security.CurrentUser;
+import com.obd.service.ReminderService;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -21,11 +22,14 @@ public class SubscriptionController {
     private final SubscriptionRepository subscriptions;
     private final UserRepository users;
     private final GroupRepository groups;
+    private final ReminderService reminderService;
 
-    public SubscriptionController(SubscriptionRepository subscriptions, UserRepository users, GroupRepository groups) {
+    public SubscriptionController(SubscriptionRepository subscriptions, UserRepository users,
+                                  GroupRepository groups, ReminderService reminderService) {
         this.subscriptions = subscriptions;
         this.users = users;
         this.groups = groups;
+        this.reminderService = reminderService;
     }
 
     @GetMapping
@@ -51,7 +55,9 @@ public class SubscriptionController {
         s.setSubscriberId(me.getId());
         s.setTargetType(req.targetType);
         s.setTargetId(req.targetId);
-        return subscriptions.save(s);
+        Subscription saved = subscriptions.save(s);
+        reminderService.notifyForNewSubscription(me.getId(), req.targetType, req.targetId);
+        return saved;
     }
 
     @DeleteMapping("/{id}")
