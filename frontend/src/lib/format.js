@@ -74,6 +74,27 @@ export function formatDaysUntilBirthday(days) {
   return `Через ${days} дн.`;
 }
 
+export function formatAge(dateString) {
+  if (!dateString) {
+    return "Не указан";
+  }
+
+  const birthDate = new Date(dateString);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age -= 1;
+  }
+
+  return `${age} ${age % 10 === 1 && age % 100 !== 11
+    ? "год"
+    : age % 10 >= 2 && age % 10 <= 4 && (age % 100 < 12 || age % 100 > 14)
+      ? "года"
+      : "лет"}`;
+}
+
 export function giftStatusLabel(status) {
   switch (status) {
     case "RESERVED":

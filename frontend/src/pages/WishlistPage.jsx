@@ -111,6 +111,7 @@ export default function WishlistPage() {
   const [gifts, setGifts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
 
   useEffect(() => {
     const loadGifts = async () => {
@@ -137,6 +138,7 @@ export default function WishlistPage() {
       });
       setGifts((current) => [response.data, ...current]);
       setGiftForm(newGiftInitialState);
+      setCreateOpen(false);
       setFeedback("Подарок добавлен в вишлист.");
     } catch (requestError) {
       setFeedback(extractApiError(requestError));
@@ -171,65 +173,6 @@ export default function WishlistPage() {
 
       {feedback ? <div className="feedback feedback-info">{feedback}</div> : null}
 
-      <section>
-        <form className="panel form-stack" onSubmit={addGift}>
-          <div className="section-title">
-            <h3>Добавить подарок</h3>
-          </div>
-
-          <label>
-            Название
-            <input
-              required
-              value={giftForm.title}
-              onChange={(event) =>
-                setGiftForm((current) => ({ ...current, title: event.target.value }))
-              }
-            />
-          </label>
-
-          <label>
-            Описание
-            <textarea
-              rows="4"
-              value={giftForm.description}
-              onChange={(event) =>
-                setGiftForm((current) => ({
-                  ...current,
-                  description: event.target.value
-                }))
-              }
-            />
-          </label>
-
-          <label>
-            Ссылка
-            <input
-              value={giftForm.url}
-              onChange={(event) =>
-                setGiftForm((current) => ({ ...current, url: event.target.value }))
-              }
-            />
-          </label>
-
-          <label>
-            Цена
-            <input
-              type="number"
-              min="0"
-              value={giftForm.price}
-              onChange={(event) =>
-                setGiftForm((current) => ({ ...current, price: event.target.value }))
-              }
-            />
-          </label>
-
-          <button type="submit" className="button button-primary">
-            Добавить в список
-          </button>
-        </form>
-      </section>
-
       <section className="panel">
         <div className="section-title">
           <div>
@@ -238,6 +181,85 @@ export default function WishlistPage() {
           </div>
           <span className="day-pill">{loading ? "..." : `${gifts.length} позиций`}</span>
         </div>
+
+        <div className="wishlist-create-actions wishlist-create-actions-top">
+          <button
+            type="button"
+            className="button button-primary wishlist-add-trigger"
+            aria-label={createOpen ? "Скрыть создание подарка" : "Добавить подарок"}
+            onClick={() => setCreateOpen((current) => !current)}
+          >
+            {createOpen ? "×" : "+"}
+          </button>
+        </div>
+
+        {createOpen ? (
+          <form className="panel form-stack wishlist-create-panel" onSubmit={addGift}>
+            <div className="section-title">
+              <h3>Добавить подарок</h3>
+            </div>
+
+            <label>
+              Название
+              <input
+                required
+                value={giftForm.title}
+                onChange={(event) =>
+                  setGiftForm((current) => ({ ...current, title: event.target.value }))
+                }
+              />
+            </label>
+
+            <label>
+              Описание
+              <textarea
+                rows="4"
+                value={giftForm.description}
+                onChange={(event) =>
+                  setGiftForm((current) => ({
+                    ...current,
+                    description: event.target.value
+                  }))
+                }
+              />
+            </label>
+
+            <label>
+              Ссылка
+              <input
+                value={giftForm.url}
+                onChange={(event) =>
+                  setGiftForm((current) => ({ ...current, url: event.target.value }))
+                }
+              />
+            </label>
+
+            <label>
+              Цена
+              <input
+                type="number"
+                min="0"
+                value={giftForm.price}
+                onChange={(event) =>
+                  setGiftForm((current) => ({ ...current, price: event.target.value }))
+                }
+              />
+            </label>
+
+            <div className="card-actions">
+              <button type="submit" className="button button-primary">
+                Добавить в список
+              </button>
+              <button
+                type="button"
+                className="button button-ghost"
+                onClick={() => setCreateOpen(false)}
+              >
+                Скрыть
+              </button>
+            </div>
+          </form>
+        ) : null}
 
         {loading ? <p className="microcopy">Загружаем ваш вишлист...</p> : null}
 

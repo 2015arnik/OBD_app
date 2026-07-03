@@ -5,8 +5,11 @@ import com.obd.dto.CreateFundraiserRequest;
 import com.obd.model.Contribution;
 import com.obd.model.Fundraiser;
 import com.obd.model.FundraiserStatus;
+import com.obd.model.Gift;
+import com.obd.model.GiftStatus;
 import com.obd.repository.ContributionRepository;
 import com.obd.repository.FundraiserRepository;
+import com.obd.repository.GiftRepository;
 import com.obd.repository.UserRepository;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -19,13 +22,15 @@ public class FundraiserService {
     private final FundraiserRepository fundraisers;
     private final ContributionRepository contributions;
     private final UserRepository users;
+    private final GiftRepository gifts;
     private final MockBankService mockBank;
 
     public FundraiserService(FundraiserRepository fundraisers, ContributionRepository contributions,
-                             UserRepository users, MockBankService mockBank) {
+                             UserRepository users, GiftRepository gifts, MockBankService mockBank) {
         this.fundraisers = fundraisers;
         this.contributions = contributions;
         this.users = users;
+        this.gifts = gifts;
         this.mockBank = mockBank;
     }
 
@@ -51,6 +56,18 @@ public class FundraiserService {
         if (!open.isEmpty()) {
             return open.get(0);
         }
+
+        if (req.giftId != null) {
+            Gift gift = gifts.findById(req.giftId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Gift not found"));
+            if (!gift.getOwnerId().equals(req.targetUserId)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Gift does not belong to the selected user");
+            }
+            if (gift.getStatus() != GiftStatus.WANTED) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Нельзя открыть сбор на уже занятый подарок");
+            }
+        }
+
         Fundraiser f = new Fundraiser();
         f.setTargetUserId(req.targetUserId);
         f.setGiftId(req.giftId);

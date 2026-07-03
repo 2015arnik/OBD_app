@@ -6,10 +6,10 @@ import StatusBadge from "../components/StatusBadge";
 import { useAuth } from "../context/AuthContext";
 import { AUTH_INVALID_EVENT, api, extractApiError, getWebSocketUrl } from "../lib/api";
 import {
+  formatAge,
   formatBirthday,
   formatDateTime,
   formatDaysUntilBirthday,
-  formatFullDate,
   formatIsoDate,
   formatMoney
 } from "../lib/format";
@@ -301,7 +301,24 @@ export default function FriendPage() {
               <article className="panel">
                 <div className="section-title">
                   <h3>О человеке</h3>
-                  <span className="day-pill">{formatFullDate(card.birthDate)}</span>
+                </div>
+                <div className="facts-grid">
+                  <div>
+                    <dt>Дата рождения</dt>
+                    <dd>{card.birthDate ? new Date(card.birthDate).toLocaleDateString("ru-RU", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric"
+                    }) : "Дата не указана"}</dd>
+                  </div>
+                  <div>
+                    <dt>До дня рождения</dt>
+                    <dd>{formatDaysUntilBirthday(card.daysUntilBirthday)}</dd>
+                  </div>
+                  <div>
+                    <dt>Возраст</dt>
+                    <dd>{formatAge(card.birthDate)}</dd>
+                  </div>
                 </div>
                 <div className="card-actions">
                   <a className="button button-ghost" href={`${api.defaults.baseURL}/users/${id}/calendar.ics`} target="_blank" rel="noreferrer">
@@ -310,9 +327,6 @@ export default function FriendPage() {
                   <button type="button" className="button button-ghost" onClick={openGoogleCalendar}>
                     Google Calendar
                   </button>
-                  <Link className="button button-ghost" to="/fundraisers">
-                    Открыть сборы
-                  </Link>
                 </div>
                 <div className="group-list">
                   {card.groups.length > 0 ? (
@@ -371,22 +385,24 @@ export default function FriendPage() {
 
                         {!isOwnCard ? (
                           <>
-                            <div className="card-actions">
-                              <Link
-                                className="button button-ghost"
-                                to="/fundraisers"
-                                state={{
-                                  prefillFundraiser: {
-                                    targetUserId: String(card.id),
-                                    giftId: String(gift.id),
-                                    giftTitle: gift.title || "",
-                                    giftPrice: gift.price ?? ""
-                                  }
-                                }}
-                              >
-                                Организовать сбор
-                              </Link>
-                            </div>
+                            {gift.status === "WANTED" ? (
+                              <div className="card-actions">
+                                <Link
+                                  className="button button-ghost"
+                                  to="/fundraisers"
+                                  state={{
+                                    prefillFundraiser: {
+                                      targetUserId: String(card.id),
+                                      giftId: String(gift.id),
+                                      giftTitle: gift.title || "",
+                                      giftPrice: gift.price ?? ""
+                                    }
+                                  }}
+                                >
+                                  Организовать сбор
+                                </Link>
+                              </div>
+                            ) : null}
                             <div className="status-actions">
                               {["WANTED", "RESERVED", "BOUGHT"].map((status) => (
                                 <button
@@ -420,11 +436,9 @@ export default function FriendPage() {
               <div className="section-title">
                 <div>
                   <h3>Чат обсуждения подарка</h3>
-                  <p className="microcopy">
-                    {isOwnCard
-                      ? "Для именинника чат по правилам проекта скрыт."
-                      : "История хранится на сервере, новые сообщения приходят через WebSocket."}
-                  </p>
+                  {isOwnCard ? (
+                    <p className="microcopy">Для именинника чат по правилам проекта скрыт.</p>
+                  ) : null}
                 </div>
                 {!isOwnCard ? (
                   <span className={`socket-pill socket-${chatState}`}>

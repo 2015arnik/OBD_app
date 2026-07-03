@@ -351,6 +351,33 @@ label {
   justify-content: center;
 }
 
+.wishlist-create-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.wishlist-create-actions-top {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.wishlist-add-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  padding: 0;
+  border-radius: 999px;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.wishlist-create-panel {
+  margin-top: 1rem;
+}
+
 .page-stack {
   display: grid;
   gap: 1.5rem;
@@ -690,15 +717,18 @@ label {
   display: grid;
   gap: 1rem;
   min-height: 100%;
+  align-content: start;
 }
 
 .chat-feed {
   display: grid;
   align-content: start;
   gap: 0.8rem;
-  min-height: 300px;
-  max-height: 560px;
-  overflow: auto;
+  min-height: 220px;
+  max-height: min(52vh, 420px);
+  padding-right: 0.35rem;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .chat-message {

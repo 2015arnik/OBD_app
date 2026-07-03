@@ -65,6 +65,9 @@ export default function FundraisersPage() {
   const [createForm, setCreateForm] = useState(() =>
     buildInitialCreateForm(location.state?.prefillFundraiser)
   );
+  const [createOpen, setCreateOpen] = useState(Boolean(location.state?.prefillFundraiser));
+  const [openListVisible, setOpenListVisible] = useState(true);
+  const [closedListVisible, setClosedListVisible] = useState(true);
   const [contributeForm, setContributeForm] = useState(contributeInitialState);
   const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState("");
@@ -111,10 +114,23 @@ export default function FundraisersPage() {
   );
 
   const visibleFundraisers = useMemo(() => fundraisers, [fundraisers]);
+  const openFundraisers = useMemo(
+    () => visibleFundraisers.filter((item) => item.status === "OPEN"),
+    [visibleFundraisers]
+  );
+  const closedFundraisers = useMemo(
+    () => visibleFundraisers.filter((item) => item.status !== "OPEN"),
+    [visibleFundraisers]
+  );
 
   const selectedFriendGifts = useMemo(
     () => giftsByUserId[createForm.targetUserId] || [],
     [createForm.targetUserId, giftsByUserId]
+  );
+
+  const availableSelectedFriendGifts = useMemo(
+    () => selectedFriendGifts.filter((gift) => gift.status === "WANTED"),
+    [selectedFriendGifts]
   );
 
   useEffect(() => {
@@ -155,6 +171,25 @@ export default function FundraisersPage() {
     };
   }, [createForm.targetUserId, giftsByUserId]);
 
+  useEffect(() => {
+    if (!createForm.giftId) {
+      return;
+    }
+
+    const stillAvailable = availableSelectedFriendGifts.some(
+      (gift) => String(gift.id) === String(createForm.giftId)
+    );
+
+    if (!stillAvailable) {
+      setCreateForm((current) => ({
+        ...current,
+        giftId: "",
+        title: "",
+        goalAmount: ""
+      }));
+    }
+  }, [availableSelectedFriendGifts, createForm.giftId]);
+
   const loadContributions = async (fundraiserId) => {
     if (contributions[fundraiserId]) {
       setExpandedId((current) => (current === fundraiserId ? null : fundraiserId));
@@ -183,6 +218,7 @@ export default function FundraisersPage() {
       });
       setFundraisers((current) => [response.data, ...current]);
       setCreateForm(createInitialState);
+      setCreateOpen(false);
       setFeedback("Сбор создан.");
     } catch (requestError) {
       setFeedback(extractApiError(requestError));
@@ -219,6 +255,111 @@ export default function FundraisersPage() {
   const remainingAmountFor = (fundraiser) =>
     Math.max((fundraiser.goalAmount || 0) - (fundraiser.collectedAmount || 0), 0);
 
+  const renderFundraiserCard = (fundraiser) => {
+    const targetUser = usersById[fundraiser.targetUserId];
+    const progress = progressFor(fundraiser);
+    const isOpen = fundraiser.status === "OPEN";
+    const remainingAmount = remainingAmountFor(fundraiser);
+
+    return (
+      <article key={fundraiser.id} className="person-card person-card-soft">
+        <div className="person-card-top">
+          <div>
+            <p className="eyebrow">{isOpen ? "Открытый сбор" : "Сбор закрыт"}</p>
+            <h3>{fundraiser.title || `Сбор для ${targetUser?.name || "пользователя"}`}</h3>
+          </div>
+          <span className="day-pill">{fundraiser.status}</span>
+        </div>
+
+        <dl className="facts-grid">
+          <div>
+            <dt>Для кого</dt>
+            <dd>{targetUser?.name || `#${fundraiser.targetUserId}`}</dd>
+          </div>
+          <div>
+            <dt>Дедлайн</dt>
+            <dd>{formatIsoDate(fundraiser.deadline)}</dd>
+          </div>
+        </dl>
+
+        <div className="progress-stack">
+          <div className="progress-meta">
+            <strong>{formatMoney(fundraiser.collectedAmount)}</strong>
+            <span>из {formatMoney(fundraiser.goalAmount)}</span>
+          </div>
+          <div className="progress-bar">
+            <div className="progress-bar-fill" style={{ width: `${progress}%` }} />
+          </div>
+        </div>
+
+        <div className="card-actions">
+          {isOpen ? (
+            <>
+              <input
+                type="number"
+                min="1"
+                placeholder="Сумма взноса"
+                value={contributeForm[fundraiser.id] || ""}
+                onChange={(event) =>
+                  setContributeForm((current) => ({
+                    ...current,
+                    [fundraiser.id]: event.target.value
+                  }))
+                }
+              />
+              <button
+                type="button"
+                className="button button-primary"
+                disabled={!contributeForm[fundraiser.id]}
+                onClick={() => contribute(fundraiser.id)}
+              >
+                Внести вклад
+              </button>
+              <button
+                type="button"
+                className="button button-ghost"
+                disabled={remainingAmount <= 0}
+                onClick={() => contribute(fundraiser.id, remainingAmount)}
+              >
+                Полностью закрыть сбор
+              </button>
+            </>
+          ) : null}
+          <button
+            type="button"
+            className="button button-ghost"
+            onClick={() => loadContributions(fundraiser.id)}
+          >
+            {expandedId === fundraiser.id ? "Скрыть взносы" : "Показать взносы"}
+          </button>
+          <Link className="button button-ghost" to={`/fundraisers/${fundraiser.id}`}>
+            Детали сбора
+          </Link>
+        </div>
+
+        {expandedId === fundraiser.id && contributions[fundraiser.id] ? (
+          <div className="member-list">
+            {contributions[fundraiser.id].length > 0 ? (
+              contributions[fundraiser.id].map((item) => (
+                <div key={item.id} className="member-row">
+                  <div>
+                    <strong>
+                      {Number(item.contributorId) === Number(user.id)
+                        ? "Вы"
+                        : usersById[item.contributorId]?.name || `Пользователь #${item.contributorId}`}
+                    </strong>
+                    <p>{item.mockTxnId || "MOCK-TXN"}</p>
+                  </div>
+                  <span className="day-pill">{formatMoney(item.amount)}</span>
+                </div>
+              ))
+            ) : null}
+          </div>
+        ) : null}
+      </article>
+    );
+  };
+
   return (
     <div className="page-stack">
       <PageHeader
@@ -228,302 +369,252 @@ export default function FundraisersPage() {
 
       {feedback ? <div className="feedback feedback-info">{feedback}</div> : null}
 
-      <section>
-        <form className="panel form-stack" onSubmit={createFundraiser}>
-          <div className="section-title">
-            <div>
-              <h3>Открыть новый сбор</h3>
+      <section className="panel section-stack">
+        <div className="wishlist-create-actions wishlist-create-actions-top">
+          <button
+            type="button"
+            className="button button-primary wishlist-add-trigger"
+            aria-label={createOpen ? "Скрыть создание сбора" : "Открыть создание сбора"}
+            onClick={() => setCreateOpen((current) => !current)}
+          >
+            {createOpen ? "×" : "+"}
+          </button>
+        </div>
+
+        {createOpen ? (
+          <form className="panel form-stack wishlist-create-panel" onSubmit={createFundraiser}>
+            <div className="section-title">
+              <div>
+                <h3>Открыть новый сбор</h3>
+              </div>
             </div>
-          </div>
 
-          <label>
-            Для кого сбор
-            <select
-              required
-              value={createForm.targetUserId}
-              onChange={(event) =>
-                setCreateForm((current) => ({
-                  ...current,
-                  targetUserId: event.target.value,
-                  giftId: "",
-                  title: "",
-                  goalAmount: ""
-                }))
-              }
-              disabled={friendUsers.length === 0}
-            >
-              <option value="">{friendUsers.length === 0 ? "Сначала добавьте друзей" : "Выберите друга"}</option>
-              {friendUsers.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          {createForm.targetUserId ? (
             <label>
-              Подарок из вишлиста
+              Для кого сбор
               <select
-                value={createForm.giftId}
-                onChange={(event) => {
-                  const selectedGift = selectedFriendGifts.find(
-                    (gift) => String(gift.id) === event.target.value
-                  );
-
+                required
+                value={createForm.targetUserId}
+                onChange={(event) =>
                   setCreateForm((current) => ({
                     ...current,
-                    giftId: event.target.value,
-                    title: selectedGift?.title || "",
-                    goalAmount: selectedGift?.price
-                      ? formatGroupedNumber(String(selectedGift.price))
-                      : ""
-                  }));
-                }}
-                disabled={wishlistLoadingUserId === createForm.targetUserId}
+                    targetUserId: event.target.value,
+                    giftId: "",
+                    title: "",
+                    goalAmount: ""
+                  }))
+                }
+                disabled={friendUsers.length === 0}
               >
-                <option value="">
-                  {wishlistLoadingUserId === createForm.targetUserId
-                    ? "Загружаем вишлист..."
-                    : "Выберите подарок"}
-                </option>
-                {selectedFriendGifts.map((gift) => (
-                  <option key={gift.id} value={gift.id}>
-                    {gift.title}
-                    {gift.price ? ` • ${formatMoney(gift.price)}` : ""}
+                <option value="">{friendUsers.length === 0 ? "Сначала добавьте друзей" : "Выберите друга"}</option>
+                {friendUsers.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
                   </option>
                 ))}
               </select>
             </label>
-          ) : null}
 
-          <label>
-            Название
-            <input
-              placeholder="Например, Сбор на подарок для Бориса"
-              value={createForm.title}
-              onChange={(event) =>
-                setCreateForm((current) => ({ ...current, title: event.target.value }))
-              }
-            />
-          </label>
+            {createForm.targetUserId ? (
+              <label>
+                Подарок из вишлиста
+                <select
+                  value={createForm.giftId}
+                  onChange={(event) => {
+                    const selectedGift = selectedFriendGifts.find(
+                      (gift) => String(gift.id) === event.target.value
+                    );
 
-          {createForm.targetUserId && !wishlistLoadingUserId && selectedFriendGifts.length === 0 ? (
-            <p className="microcopy">У этого друга пока нет подарков в вишлисте.</p>
-          ) : null}
+                    setCreateForm((current) => ({
+                      ...current,
+                      giftId: event.target.value,
+                      title: selectedGift?.title || "",
+                      goalAmount: selectedGift?.price
+                        ? formatGroupedNumber(String(selectedGift.price))
+                        : ""
+                    }));
+                  }}
+                  disabled={wishlistLoadingUserId === createForm.targetUserId}
+                >
+                  <option value="">
+                    {wishlistLoadingUserId === createForm.targetUserId
+                      ? "Загружаем вишлист..."
+                      : "Выберите подарок"}
+                  </option>
+                  {availableSelectedFriendGifts.map((gift) => (
+                    <option key={gift.id} value={gift.id}>
+                      {gift.title}
+                      {gift.price ? ` • ${formatMoney(gift.price)}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
 
-          <label>
-            Цель, ₽
-            <input
-              required
-              type="text"
-              inputMode="numeric"
-              placeholder="Например, 10 000"
-              value={createForm.goalAmount}
-              onChange={(event) =>
-                setCreateForm((current) => ({
-                  ...current,
-                  goalAmount: formatGroupedNumber(event.target.value)
-                }))
-              }
-            />
-          </label>
-
-          <div className="form-stack">
-            <label>Дедлайн</label>
-            <div className="cluster">
-              <button
-                type="button"
-                className={
-                  createForm.deadlineMode === "date"
-                    ? "button button-primary"
-                    : "button button-ghost"
+            <label>
+              Название
+              <input
+                placeholder="Например, Сбор на подарок для Бориса"
+                value={createForm.title}
+                onChange={(event) =>
+                  setCreateForm((current) => ({ ...current, title: event.target.value }))
                 }
-                onClick={() =>
+              />
+            </label>
+
+            {createForm.targetUserId && !wishlistLoadingUserId && availableSelectedFriendGifts.length === 0 ? (
+              <p className="microcopy">У этого друга нет свободных подарков для организации сбора.</p>
+            ) : null}
+
+            <label>
+              Цель, ₽
+              <input
+                required
+                type="text"
+                inputMode="numeric"
+                placeholder="Например, 10 000"
+                value={createForm.goalAmount}
+                onChange={(event) =>
                   setCreateForm((current) => ({
                     ...current,
-                    deadlineMode: "date",
-                    deadlineDays: ""
+                    goalAmount: formatGroupedNumber(event.target.value)
                   }))
                 }
-              >
-                Дата
+              />
+            </label>
+
+            <div className="form-stack">
+              <label>Дедлайн</label>
+              <div className="cluster">
+                <button
+                  type="button"
+                  className={
+                    createForm.deadlineMode === "date"
+                      ? "button button-primary"
+                      : "button button-ghost"
+                  }
+                  onClick={() =>
+                    setCreateForm((current) => ({
+                      ...current,
+                      deadlineMode: "date",
+                      deadlineDays: ""
+                    }))
+                  }
+                >
+                  Дата
+                </button>
+                <button
+                  type="button"
+                  className={
+                    createForm.deadlineMode === "days"
+                      ? "button button-primary"
+                      : "button button-ghost"
+                  }
+                  onClick={() =>
+                    setCreateForm((current) => ({
+                      ...current,
+                      deadlineMode: "days",
+                      deadline: ""
+                    }))
+                  }
+                >
+                  Количество дней
+                </button>
+              </div>
+
+              {createForm.deadlineMode === "date" ? (
+                <input
+                  type="date"
+                  value={createForm.deadline}
+                  onChange={(event) =>
+                    setCreateForm((current) => ({ ...current, deadline: event.target.value }))
+                  }
+                />
+              ) : (
+                <input
+                  type="number"
+                  min="1"
+                  inputMode="numeric"
+                  placeholder="Например, 14"
+                  value={createForm.deadlineDays}
+                  onChange={(event) =>
+                    setCreateForm((current) => ({
+                      ...current,
+                      deadlineDays: event.target.value.replace(/\D/g, "")
+                    }))
+                  }
+                />
+              )}
+            </div>
+
+            <div className="card-actions">
+              <button type="submit" className="button button-primary">
+                Создать сбор
               </button>
               <button
                 type="button"
-                className={
-                  createForm.deadlineMode === "days"
-                    ? "button button-primary"
-                    : "button button-ghost"
-                }
-                onClick={() =>
-                  setCreateForm((current) => ({
-                    ...current,
-                    deadlineMode: "days",
-                    deadline: ""
-                  }))
-                }
+                className="button button-ghost"
+                onClick={() => setCreateOpen(false)}
               >
-                Количество дней
+                Скрыть
               </button>
             </div>
 
-            {createForm.deadlineMode === "date" ? (
-              <input
-                type="date"
-                value={createForm.deadline}
-                onChange={(event) =>
-                  setCreateForm((current) => ({ ...current, deadline: event.target.value }))
-                }
-              />
+            {friendUsers.length === 0 ? (
+              <p className="microcopy">
+                Пока у вас нет друзей в системе, поэтому открыть сбор пока не для кого.
+              </p>
             ) : (
-              <input
-                type="number"
-                min="1"
-                inputMode="numeric"
-                placeholder="Например, 14"
-                value={createForm.deadlineDays}
-                onChange={(event) =>
-                  setCreateForm((current) => ({
-                    ...current,
-                    deadlineDays: event.target.value.replace(/\D/g, "")
-                  }))
-                }
-              />
+              <p className="microcopy">
+                Создавать новые сборы можно только для пользователей из вашего списка друзей.
+              </p>
             )}
-          </div>
-
-          <button type="submit" className="button button-primary">
-            Создать сбор
-          </button>
-
-          {friendUsers.length === 0 ? (
-            <p className="microcopy">
-              Пока у вас нет друзей в системе, поэтому открыть сбор пока не для кого.
-            </p>
-          ) : (
-            <p className="microcopy">
-              Создавать новые сборы можно только для пользователей из вашего списка друзей.
-            </p>
-          )}
-        </form>
-      </section>
-
-      <section className="panel section-stack">
-        <div className="section-title">
-          <div>
-            <h3>Активные и завершённые сборы</h3>
-          </div>
-          <span className="day-pill">{visibleFundraisers.length} сборов</span>
-        </div>
+          </form>
+        ) : null}
 
         {loading ? <p className="microcopy">Загружаем сборы...</p> : null}
 
-        <div className="cards-grid">
-          {visibleFundraisers.map((fundraiser) => {
-            const targetUser = usersById[fundraiser.targetUserId];
-            const progress = progressFor(fundraiser);
-            const isOpen = fundraiser.status === "OPEN";
-            const remainingAmount = remainingAmountFor(fundraiser);
+        <div className="section-stack">
+          <div className="section-title">
+            <h3>Открытые сборы</h3>
+            <div className="card-actions">
+              <span className="day-pill">{openFundraisers.length}</span>
+              <button
+                type="button"
+                className="button button-ghost"
+                onClick={() => setOpenListVisible((current) => !current)}
+              >
+                {openListVisible ? "Скрыть" : "Показать"}
+              </button>
+            </div>
+          </div>
 
-            return (
-              <article key={fundraiser.id} className="person-card person-card-soft">
-                <div className="person-card-top">
-                  <div>
-                    <p className="eyebrow">{isOpen ? "Открытый сбор" : "Сбор закрыт"}</p>
-                    <h3>{fundraiser.title || `Сбор для ${targetUser?.name || "пользователя"}`}</h3>
-                  </div>
-                  <span className="day-pill">{fundraiser.status}</span>
-                </div>
+          {openListVisible ? (
+            <div className="cards-grid">
+              {openFundraisers.map((fundraiser) => renderFundraiserCard(fundraiser))}
+            </div>
+          ) : null}
+        </div>
 
-                <dl className="facts-grid">
-                  <div>
-                    <dt>Для кого</dt>
-                    <dd>{targetUser?.name || `#${fundraiser.targetUserId}`}</dd>
-                  </div>
-                  <div>
-                    <dt>Дедлайн</dt>
-                    <dd>{formatIsoDate(fundraiser.deadline)}</dd>
-                  </div>
-                </dl>
+        <div className="section-stack">
+          <div className="section-title">
+            <h3>Закрытые сборы</h3>
+            <div className="card-actions">
+              <span className="day-pill">{closedFundraisers.length}</span>
+              <button
+                type="button"
+                className="button button-ghost"
+                onClick={() => setClosedListVisible((current) => !current)}
+              >
+                {closedListVisible ? "Скрыть" : "Показать"}
+              </button>
+            </div>
+          </div>
 
-                <div className="progress-stack">
-                  <div className="progress-meta">
-                    <strong>{formatMoney(fundraiser.collectedAmount)}</strong>
-                    <span>из {formatMoney(fundraiser.goalAmount)}</span>
-                  </div>
-                  <div className="progress-bar">
-                    <div className="progress-bar-fill" style={{ width: `${progress}%` }} />
-                  </div>
-                </div>
-
-                <div className="card-actions">
-                  {isOpen ? (
-                    <>
-                      <input
-                        type="number"
-                        min="1"
-                        placeholder="Сумма взноса"
-                        value={contributeForm[fundraiser.id] || ""}
-                        onChange={(event) =>
-                          setContributeForm((current) => ({
-                            ...current,
-                            [fundraiser.id]: event.target.value
-                          }))
-                        }
-                      />
-                      <button
-                        type="button"
-                        className="button button-primary"
-                        disabled={!contributeForm[fundraiser.id]}
-                        onClick={() => contribute(fundraiser.id)}
-                      >
-                        Внести вклад
-                      </button>
-                      <button
-                        type="button"
-                        className="button button-ghost"
-                        disabled={remainingAmount <= 0}
-                        onClick={() => contribute(fundraiser.id, remainingAmount)}
-                      >
-                        Полностью закрыть сбор
-                      </button>
-                    </>
-                  ) : null}
-                  <button
-                    type="button"
-                    className="button button-ghost"
-                    onClick={() => loadContributions(fundraiser.id)}
-                  >
-                    {expandedId === fundraiser.id ? "Скрыть взносы" : "Показать взносы"}
-                  </button>
-                  <Link className="button button-ghost" to={`/fundraisers/${fundraiser.id}`}>
-                    Детали сбора
-                  </Link>
-                </div>
-
-                {expandedId === fundraiser.id && contributions[fundraiser.id] ? (
-                  <div className="member-list">
-                    {contributions[fundraiser.id].length > 0 ? (
-                      contributions[fundraiser.id].map((item) => (
-                        <div key={item.id} className="member-row">
-                          <div>
-                            <strong>
-                              {Number(item.contributorId) === Number(user.id)
-                                ? "Вы"
-                                : usersById[item.contributorId]?.name || `Пользователь #${item.contributorId}`}
-                            </strong>
-                            <p>{item.mockTxnId || "MOCK-TXN"}</p>
-                          </div>
-                          <span className="day-pill">{formatMoney(item.amount)}</span>
-                        </div>
-                      ))
-                    ) : null}
-                  </div>
-                ) : null}
-              </article>
-            );
-          })}
+          {closedListVisible ? (
+            <div className="cards-grid">
+              {closedFundraisers.map((fundraiser) => renderFundraiserCard(fundraiser))}
+            </div>
+          ) : null}
         </div>
       </section>
     </div>
