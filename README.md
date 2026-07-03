@@ -19,6 +19,18 @@ mvn spring-boot:run
 - Swagger: `http://localhost:8080/swagger-ui.html`
 - Консоль БД H2: `http://localhost:8080/h2-console` (JDBC URL `jdbc:h2:mem:obd`, user `sa`)
 
+## Как запустить веб-фронтенд
+Требуется Node.js 20+.
+```
+cd frontend
+npm install
+cp .env.example .env
+npm run dev
+```
+- Веб-приложение: `http://localhost:5173`
+- По умолчанию фронтенд ходит в API `http://localhost:8080`
+- Для production-сборки: `npm run build`
+
 ## Проверка в Swagger
 1. `POST /auth/register` → скопируйте `token`.
 2. Кнопка Authorize сверху → вставьте токен.
@@ -78,8 +90,9 @@ ws.onopen = () => ws.send(JSON.stringify({ text: "Привет!" }));
 - [x] Авторизация (JWT + BCrypt)
 - [x] API ядра (users, groups, gifts, subscriptions, notifications)
 - [x] Реалтайм-чат (WebSocket) + приватность именинника
+- [x] Веб-фронтенд (React + Vite + PWA) для ядра: auth, люди, карточка друга, мой вишлист, группы, уведомления
 - [ ] Усложнения: сбор средств (мок-банк), планировщик, календарь, админка
 - [ ] Seed-данные
-- [ ] Веб и мобильное приложения
+- [ ] Мобильное приложение
 
 Стратегия и план — `docs/СТРАТЕГИЯ.md`. Как продолжить с другого аккаунта — `HANDOFF.md`.
