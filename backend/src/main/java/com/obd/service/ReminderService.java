@@ -201,8 +201,23 @@ public class ReminderService {
         f.setCollectedAmount(0);
         f.setStatus(FundraiserStatus.OPEN);
         f.setDeadline(today.plusDays(daysUntil(birthdayUser, today)));
-        fundraisers.save(f);
+        f = fundraisers.save(f);
+        notifyAboutFundraiser(birthdayUser, f.getId());
+    }
 
+    private void notifyAboutFundraiser(User birthdayUser, Long fundraiserId) {
+        Set<Long> subscriberIds = new HashSet<>(friendSubscriberIdsFor(birthdayUser));
+        subscriberIds.addAll(groupSubscriberSourcesFor(birthdayUser).keySet());
+        subscriberIds.remove(birthdayUser.getId());
+        String link = "/fundraisers/" + fundraiserId;
+        String message = "Открыт сбор на подарок для " + birthdayUser.getName() + ". Присоединяйтесь!";
+        for (Long subscriberId : subscriberIds) {
+            Notification n = new Notification();
+            n.setUserId(subscriberId);
+            n.setMessage(message);
+            n.setLink(link);
+            notifications.save(n);
+        }
     }
 
     private int daysUntil(User u, LocalDate today) {
